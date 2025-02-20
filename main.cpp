@@ -7,8 +7,7 @@ int main(int ac, char **av)
 
     //check input
 
-    //socket()  socket(AF_LOCAL, SOCK_STREAM, 0);
-    // AF LOCAL is unix socker, sock stream because SOCK_DGRAM with 0 as third argument would use udp
+    //socket()  socket(AF_INET, SOCK_STREAM, 0);
 
     //bind()  with port is first arg (av[1])  -- gives name to socket (address)
 
