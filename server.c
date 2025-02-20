@@ -48,35 +48,38 @@ int main(int argc, char *argv[])
      listen(sockfd,5);
      clilen = sizeof(cli_addr);
 
-    newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
-
-    int count = 0;
-    struct pollfd s_poll;
-
-    memset(&s_poll, 0, sizeof(s_poll));
-    s_poll.fd = newsockfd;
-    s_poll.events = POLLIN;
-
-
-    if (newsockfd < 0)
-        error("ERROR on accept");
     while (1)
     {
-        if (poll(&s_poll, 1, 100) == 1)
+        newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+
+        int count = 0;
+        struct pollfd s_poll;
+
+        memset(&s_poll, 0, sizeof(s_poll));
+        s_poll.fd = newsockfd;
+        s_poll.events = POLLIN;
+
+
+        if (newsockfd < 0)
+            error("ERROR on accept");
+        while (1)
         {
-            bzero(buffer,256);
-            n = read(newsockfd,buffer,255);
-            if (n < 0) error("ERROR reading from socket");
-            printf("Here is the message: %s\n",buffer);
-            n = write(newsockfd,"I got your message",18);
-            if (n < 0) error("ERROR writing to socket");
-            break ;
+            if (poll(&s_poll, 1, 100) == 1)
+            {
+                bzero(buffer,256);
+                n = read(newsockfd,buffer,255);
+                if (n < 0) error("ERROR reading from socket");
+                printf("Here is the message: %s\n",buffer);
+                n = write(newsockfd,"I got your message",18);
+                if (n < 0) error("ERROR writing to socket");
+                break ;
+            }
+            else
+                count++;
         }
-        else
-            count++;
+        printf("Took %d\n", count * 100);
+        close(newsockfd);
     }
-    printf("Took %d\n", count * 100);
-    close(newsockfd);
     close(sockfd);
     return 0;
 }
