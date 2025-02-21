@@ -45,6 +45,7 @@ int main(int argc, char *argv[])
      if (bind(sockfd, (struct sockaddr *) &serv_addr,
               sizeof(serv_addr)) < 0)
               error("ERROR on binding");
+
      listen(sockfd,5);
      clilen = sizeof(cli_addr);
 
@@ -77,8 +78,11 @@ int main(int argc, char *argv[])
             else
                 count++;
         }
-        printf("Took %d\n", count * 100);
+        //buffer has newline char
+        printf("Took %d   buffer is %s\n", count * 100, buffer);
         close(newsockfd);
+        if (strncmp(buffer, "stop", 4) == 0)
+            break ;
     }
     close(sockfd);
     return 0;
