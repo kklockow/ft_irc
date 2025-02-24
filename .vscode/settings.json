@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "complex": "cpp"
+        "complex": "cpp",
+        "in.h": "c",
+        "stdlib.h": "c",
+        "string.h": "c"
     }
 }

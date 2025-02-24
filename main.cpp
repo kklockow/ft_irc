@@ -2,45 +2,25 @@
 #include <iostream>
 #include "Server.hpp"
 
-void    error(std::string message, std::string type);
-int     check_input(int ac);
+void    check_input(int ac);
 
 int main(int ac, char **av)
 {
     Server server;
-    Client client;
 
     check_input(ac);
-    server.init();
-    //socket()  socket(AF_INET, SOCK_STREAM, 0);
-
-    //bind()  with port is first arg (av[1])  -- gives name to socket (address)
-
-    //listen()
-
-    //accept() (blocks till connection with a client)
-
-
-    //SEND AND RECEIVE DATA
-    std::cout << av[1] << std::endl;
-
+    server.init(av);
+    server.loop();
+    server.end();
     return (0);
 }
 
-int     check_input(int ac)
+void     check_input(int ac)
 {
     if (ac != 2)
         error("ERROR, no port provided", "human");
 }
 
-void error(std::string message, std::string type)
-{
-    if (type == "machine")
-        std::cerr << message << std::strerror(errno) << std::endl;
-    if (type == "human")
-        std::cerr << message << std::endl;
-    exit(1);
-}
 
 //important sources: https://www.rfc-editor.org/rfc/rfc1459.txt
 
