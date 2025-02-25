@@ -79,16 +79,27 @@ void Server::accept_client()
     this->init_poll_struct(new_client.get_sockfd());
 }
 
+void Server::receive_data(int fd)
+{
+    char    buffer[1028];
+    int     n;
+
+    memset(&buffer, 0, sizeof(buffer));
+    n = read(fd, buffer, 1028);
+    if (n < 0)
+        error("ERROR reading from socket", "machine");
+    printf("Here is the message: %s\n", buffer);
+    n = write(fd,"I got your message\n",19);
+    if (n < 0)
+        error("ERROR writing to socket", "machine");
+    if (strncmp(buffer, "stop", 4) == 0)
+        exit(0);
+}
+
 void Server::loop()
 {
-    int time;
-    int n;
-    char buffer[256];
-
     while (1)
     {
-        time = 0;
-        n = 0;
         if (poll(&this->_poll_fd[0], this->_poll_fd.size(), -1) == -1)
             error("ERROR during poll", "machine");
         std::cout << this->_poll_fd.size() << std::endl;
@@ -99,20 +110,9 @@ void Server::loop()
                 if (i == 0)
                     this->accept_client();
                 else
-                {
-                    bzero(buffer,256);
-                    n = read(this->_client[i - 1].get_sockfd(), buffer, 255);
-                    if (n < 0)
-                        error("ERROR reading from socket", "machine");
-                    printf("Here is the message: %s\n", buffer);
-                    n = write(this->_client[i - 1].get_sockfd(),"I got your message\n",19);
-                    if (n < 0)
-                        error("ERROR writing to socket", "machine");
-                }
+                    this->receive_data(this->_poll_fd[i].fd);
             }
         }
-        if (strncmp(buffer, "stop", 4) == 0)
-            break ;
     }
 }
 
