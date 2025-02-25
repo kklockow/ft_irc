@@ -51,7 +51,7 @@ void Server::init_poll_struct(int fd)
     new_poll.fd = fd;
     new_poll.events = POLLIN;
     new_poll.revents = 0;
-    this->_poll.push_back(new_poll);
+    this->_poll_fd.push_back(new_poll);
 }
 
 void Server::init(char **av)
@@ -89,12 +89,12 @@ void Server::loop()
     {
         time = 0;
         n = 0;
-        if (poll(&this->_poll[0], this->_poll.size(), -1) == -1)
+        if (poll(&this->_poll_fd[0], this->_poll_fd.size(), -1) == -1)
             error("ERROR during poll", "machine");
-        std::cout << this->_poll.size() << std::endl;
-        for (size_t i = 0; i < this->_poll.size(); i++)
+        std::cout << this->_poll_fd.size() << std::endl;
+        for (size_t i = 0; i < this->_poll_fd.size(); i++)
         {
-            if (this->_poll[i].revents & POLLIN)
+            if (this->_poll_fd[i].revents & POLLIN)
             {
                 if (i == 0)
                     this->accept_client();

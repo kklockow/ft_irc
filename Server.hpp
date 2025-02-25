@@ -19,7 +19,7 @@ class Server
         int                             _port;
         struct sockaddr_in              _server_address;
         std::vector<Client>             _client;
-        std::vector<struct pollfd>      _poll;
+        std::vector<struct pollfd>      _poll_fd;
         void                            create_socket();
         void                            fill_socket_struct();
         void                            bind_server_address();
