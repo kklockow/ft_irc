@@ -17,7 +17,10 @@ class Client
         socklen_t           _client_len;
 
     public:
+        void                set_sockfd(int new_sockfd);
         int                 get_sockfd();
-        struct sockaddr_in  get_server_address();
-        void                init(int server_sockfd);
+        void                set_address(struct sockaddr_in new_sockaddr_in);
+        struct sockaddr_in  get_address();
+        void                set_len(socklen_t new_client_len);
+        socklen_t           get_len();
 };

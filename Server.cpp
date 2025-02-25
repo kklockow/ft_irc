@@ -25,16 +25,33 @@ void Server::create_socket()
 
 void Server::fill_socket_struct()
 {
+    int enabled = 1;
+
     bzero((char *) &this->_server_address, sizeof(this->_server_address));
     this->_server_address.sin_family = AF_INET;
     this->_server_address.sin_addr.s_addr = INADDR_ANY;
     this->_server_address.sin_port = htons(this->_port);
+    if (setsockopt(this->_sockfd, SOL_SOCKET, SO_REUSEADDR, &enabled, sizeof(enabled)) < 0)
+        error("ERROR on setsockopt", "machine");
+    if (fcntl(this->_sockfd, F_SETFL, O_NONBLOCK) < 0)
+        error("ERROR on fcntl", "machine");
 }
 
 void Server::bind_server_address()
 {
     if (bind(this->_sockfd, (struct sockaddr *) &this->_server_address, sizeof(this->_server_address)) < 0)
         error("ERROR on binding", "machine");
+}
+
+void Server::init_poll_struct(int fd)
+{
+    struct pollfd new_poll;
+
+    memset(&new_poll, 0, sizeof(new_poll));
+    new_poll.fd = fd;
+    new_poll.events = POLLIN;
+    new_poll.revents = 0;
+    this->_poll.push_back(new_poll);
 }
 
 void Server::init(char **av)
@@ -44,13 +61,22 @@ void Server::init(char **av)
     this->fill_socket_struct();
     this->bind_server_address();
     listen(this->_sockfd, 5);
+    this->init_poll_struct(this->_sockfd);
 }
 
-void Server::init_poll_struct()
+void Server::accept_client()
 {
-    memset(&this->_s_poll, 0, sizeof(this->_s_poll));
-    this->_s_poll.fd = this->_client.get_sockfd();
-    this->_s_poll.events = POLLIN;
+    Client               new_client;
+    struct sockaddr_in   temp_client_address;
+    socklen_t            temp_client_len;
+
+    new_client.set_len(sizeof(new_client.get_address()));
+    temp_client_len = new_client.get_len();
+    new_client.set_sockfd(accept(this->_sockfd, (struct sockaddr *)&temp_client_address, &temp_client_len));
+    if (new_client.get_sockfd() < 0)
+        error("ERROR on accept", "machine");
+    this->_client.push_back(new_client);
+    this->init_poll_struct(new_client.get_sockfd());
 }
 
 void Server::loop()
@@ -63,26 +89,28 @@ void Server::loop()
     {
         time = 0;
         n = 0;
-        this->_client.init(this->_sockfd);
-        this->init_poll_struct();
-        while (1)
+        if (poll(&this->_poll[0], this->_poll.size(), -1) == -1)
+            error("ERROR during poll", "machine");
+        std::cout << this->_poll.size() << std::endl;
+        for (size_t i = 0; i < this->_poll.size(); i++)
         {
-            if (poll(&this->_s_poll, 1, 100) == 1)
+            if (this->_poll[i].revents & POLLIN)
             {
-                bzero(buffer,256);
-                n = read(this->_client.get_sockfd(), buffer, 255);
-                if (n < 0)
-                    error("ERROR reading from socket", "machine");
-                printf("Here is the message: %s\n", buffer);
-                n = write(this->_client.get_sockfd(),"I got your message",18);
-                if (n < 0) error("ERROR writing to socket", "machine");
-                    break ;
+                if (i == 0)
+                    this->accept_client();
+                else
+                {
+                    bzero(buffer,256);
+                    n = read(this->_client[i - 1].get_sockfd(), buffer, 255);
+                    if (n < 0)
+                        error("ERROR reading from socket", "machine");
+                    printf("Here is the message: %s\n", buffer);
+                    n = write(this->_client[i - 1].get_sockfd(),"I got your message\n",19);
+                    if (n < 0)
+                        error("ERROR writing to socket", "machine");
+                }
             }
-            else
-                time++;
         }
-        printf("Took %d   buffer is %s\n", time * 100, buffer);
-        close(this->_client.get_sockfd());
         if (strncmp(buffer, "stop", 4) == 0)
             break ;
     }

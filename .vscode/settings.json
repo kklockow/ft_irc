@@ -3,6 +3,8 @@
         "complex": "cpp",
         "in.h": "c",
         "stdlib.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "ios": "cpp",
+        "locale": "cpp"
     }
 }
