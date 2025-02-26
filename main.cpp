@@ -43,3 +43,4 @@ void     check_input(int ac)
 //    (^G or ASCII 7), or a comma (',' which is used as a list item
 //    separator by the protocol).
 
+//dont forget fd leaks

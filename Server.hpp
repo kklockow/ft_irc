@@ -25,7 +25,7 @@ class Server
         void                            bind_server_address();
         void                            init_poll_struct(int fd);
         void                            accept_client();
-        void                            receive_data(int fd);
+        void                            receive_data(int fd, int client_index);
 
     public:
         int                             get_sockfd();

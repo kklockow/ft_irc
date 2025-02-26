@@ -70,6 +70,7 @@ void Server::accept_client()
     struct sockaddr_in   temp_client_address;
     socklen_t            temp_client_len;
 
+    new_client.set_name((char *)"none");
     new_client.set_len(sizeof(new_client.get_address()));
     temp_client_len = new_client.get_len();
     new_client.set_sockfd(accept(this->_sockfd, (struct sockaddr *)&temp_client_address, &temp_client_len));
@@ -79,7 +80,7 @@ void Server::accept_client()
     this->init_poll_struct(new_client.get_sockfd());
 }
 
-void Server::receive_data(int fd)
+void Server::receive_data(int fd, int client_index)
 {
     char    buffer[1028];
     int     n;
@@ -88,13 +89,26 @@ void Server::receive_data(int fd)
     n = read(fd, buffer, 1028);
     if (n < 0)
         error("ERROR reading from socket", "machine");
-    printf("Here is the message: %s\n", buffer);
-    n = write(fd,"I got your message\n",19);
-    if (n < 0)
-        error("ERROR writing to socket", "machine");
+    // printf("Here is the message: %s\n", buffer);
+    std::cout << "Message: " << buffer;
     if (strncmp(buffer, "stop", 4) == 0)
         exit(0);
+    if (strncmp(buffer, "NICK ", 5) == 0)
+    {
+        std::cout << "hi" << std::endl;
+        this->_client[client_index].set_name(buffer + 5);
+    }
+    n = putstr_fd((char *)"I got your message\n", fd);
+    if (n < 0)
+        error("ERROR writing to socket", "machine");
+    n = putstr_fd(this->_client[client_index].get_name(), fd);
+    if (n < 0)
+        error("ERROR writing to socket", "machine");
+    std::cout << "name is: " << this->_client[client_index].get_name() << std::endl;
+
 }
+
+//maybe newline character to be sure whole message was send
 
 void Server::loop()
 {
@@ -102,7 +116,6 @@ void Server::loop()
     {
         if (poll(&this->_poll_fd[0], this->_poll_fd.size(), -1) == -1)
             error("ERROR during poll", "machine");
-        std::cout << this->_poll_fd.size() << std::endl;
         for (size_t i = 0; i < this->_poll_fd.size(); i++)
         {
             if (this->_poll_fd[i].revents & POLLIN)
@@ -110,7 +123,7 @@ void Server::loop()
                 if (i == 0)
                     this->accept_client();
                 else
-                    this->receive_data(this->_poll_fd[i].fd);
+                    this->receive_data(this->_poll_fd[i].fd, i - 1);
             }
         }
     }
