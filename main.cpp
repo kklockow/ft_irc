@@ -12,6 +12,7 @@ int main(int ac, char **av)
     server.init(av);
     server.loop();
     server.end();
+    exit(0);
     return (0);
 }
 

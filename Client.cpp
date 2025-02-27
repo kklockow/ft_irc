@@ -31,12 +31,14 @@ socklen_t Client::get_len()
     return (this->_client_len);
 }
 
-void Client::set_name(char *new_name)
+void Client::set_nick_name(char *new_name)
 {
-    strcpy(this->_name, new_name);
+    std::string temp_name(new_name);
+
+    this->_nick_name = temp_name;
 }
 
-char *Client::get_name()
+std::string Client::get_nick_name()
 {
-    return(this->_name);
+    return(this->_nick_name);
 }
