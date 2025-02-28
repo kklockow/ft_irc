@@ -29,7 +29,7 @@ class Server
         void                            accept_client();
         void                            receive_data(int client_index);
         void                            handle_data(int client_index);
-        void                            parse_message_line(std::string message_line, int client_index);
+        struct msg_tokens               parse_message_line(std::string line);
 
     public:
         int                             get_sockfd();
