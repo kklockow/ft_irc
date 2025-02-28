@@ -11,6 +11,8 @@
 #include <unistd.h>
 #include <vector>
 #include <fcntl.h>
+#include <sstream>
+#include <regex>
 
 class Server
 {
@@ -25,7 +27,9 @@ class Server
         void                            bind_server_address();
         void                            init_poll_struct(int fd);
         void                            accept_client();
-        void                            receive_data(int fd, int client_index);
+        void                            receive_data(int client_index);
+        void                            handle_data(int client_index);
+        void                            parse_message_line(std::string message_line, int client_index);
 
     public:
         int                             get_sockfd();

@@ -40,5 +40,17 @@ void Client::set_nick_name(char *new_name)
 
 std::string Client::get_nick_name()
 {
-    return(this->_nick_name);
+    return (this->_nick_name);
+}
+
+void Client::set_last_message(char *message)
+{
+    std::string temp_message(message);
+
+    this->_last_message = temp_message;
+}
+
+std::string Client::get_last_message()
+{
+    return (this->_last_message);
 }

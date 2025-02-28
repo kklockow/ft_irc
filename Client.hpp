@@ -16,6 +16,7 @@ class Client
         struct sockaddr_in  _client_address;
         socklen_t           _client_len;
         std::string         _nick_name;
+        std::string         _last_message;
 
     public:
         void                set_sockfd(int new_sockfd);
@@ -26,4 +27,6 @@ class Client
         socklen_t           get_len();
         void                set_nick_name(char *new_name);
         std::string         get_nick_name();
+        void                set_last_message(char *message);
+        std::string         get_last_message();
 };

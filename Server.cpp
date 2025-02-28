@@ -134,41 +134,60 @@ void Server::accept_client()
 //    client, drop the NICK command, and not generate any kills.
 
 
-void Server::receive_data(int fd, int client_index)
+void Server::receive_data(int client_index)
 {
     char    buffer[1028];
-    int     n;
+    int     n = 0;
 
-    n = client_index;
-    n = 0;
     memset(&buffer, 0, sizeof(buffer));
-    n = read(fd, buffer, 1028);
+    n = read(this->_client[client_index].get_sockfd(), buffer, 1028);
     if (n < 0)
         error("ERROR reading from socket", "machine");
+    this->_client[client_index].set_last_message(buffer);
+}
+
+//maybe newline character to be sure whole message was send
     // n = putstr_fd((char *)"I got your message\n", fd);
     // if (n < 0)
     //     error("ERROR writing to socket", "machine");
-    n = 0;
-    n = putstr_fd((char *)":http://kvirc.net/ 001 newbie :Welcome to the Internet Relay Network newbie!\n", fd);
-    if (n < 0)
-        error("ERROR writing to socket", "machine");
-    // printf("Here is the message: [%s]\n", buffer);
-    std::cout << "Message: [" << buffer << "]" << std::endl;
-    if (strncmp(buffer, "stop", 4) == 0)
-        exit(0);
-    if (strncmp(buffer, "NICK ", 5) == 0)
-    {
-        std::cout << "hi" << std::endl;
-        this->_client[client_index].set_nick_name(buffer + 5);
-    }
+    // n = 0;
+    // n = putstr_fd((char *)":http://kvirc.net/ 001 newbie :Welcome to the Internet Relay Network newbie!\n", fd);
+    // if (n < 0)
+    //     error("ERROR writing to socket", "machine");
+    // // printf("Here is the message: [%s]\n", buffer);
+    // std::cout << "Message: [" << buffer << "]" << std::endl;
+    // if (strncmp(buffer, "stop", 4) == 0)
+    //     exit(0);
+    // if (strncmp(buffer, "NICK ", 5) == 0)
+    // {
+    //     std::cout << "hi" << std::endl;
+    //     this->_client[client_index].set_nick_name(buffer + 5);
+    // }
     // n = putstr_fd(this->_client[client_index].get_name(), fd);
     // if (n < 0)
     //     error("ERROR writing to socket", "machine");
 
-    std::cout << "name is: [" << this->_client[client_index].get_nick_name() << "]" << std::endl;
+    // std::cout << "name is: [" << this->_client[client_index].get_nick_name() << "]" << std::endl;
+
+
+// [":" <prefix> SPACE] <command> [params] [":" trailing]
+void Server::parse_message_line(std::string line, int client_index)
+{
+
 }
 
-//maybe newline character to be sure whole message was send
+void Server::handle_data(int client_index)
+{
+    std::stringstream    message_stream(this->_client[client_index].get_last_message());
+    std::string          line;
+
+    while (std::getline(message_stream, line))
+    {
+        if (line.empty() || line.back() == '\n')
+            line.pop_back();
+        this->parse_message_line(line, client_index);
+    }
+}
 
 void Server::loop()
 {
@@ -181,9 +200,14 @@ void Server::loop()
             if (this->_poll_fd[i].revents & POLLIN)
             {
                 if (i == 0)
+                {
                     this->accept_client();
+                }
                 else
-                    this->receive_data(this->_poll_fd[i].fd, i - 1);
+                {
+                    this->receive_data(i - 1);
+                    this->handle_data(i - 1);
+                }
             }
         }
     }
