@@ -30,6 +30,7 @@ class Server
         void                            receive_data(int client_index);
         void                            handle_data(int client_index);
         struct msg_tokens               parse_message_line(std::string line);
+        void                            execute_command(struct msg_tokens tokenized_message, int client_index);
 
     public:
         int                             get_sockfd();

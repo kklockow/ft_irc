@@ -118,6 +118,13 @@ struct msg_tokens Server::parse_message_line(std::string line)
     return(tokenized_message);
 }
 
+void Server::execute_command(struct msg_tokens tokenized_message, int client_index)
+{
+    if (tokenized_message.command == "STOP")
+        exit(0);
+    client_index = 1;
+}
+
 void Server::handle_data(int client_index)
 {
     std::stringstream       message_stream(this->_client[client_index].get_last_message());
@@ -129,6 +136,10 @@ void Server::handle_data(int client_index)
         if (line.empty() || line.back() == '\n')
             line.pop_back();
         tokenized_message = this->parse_message_line(line);
+        this->execute_command(tokenized_message, client_index);
+    }
+}
+
         // std::cout << "prefix: " << tokenized_message.prefix << std::endl;
         // std::cout << "command: " << tokenized_message.command << std::endl;
         // std::cout << "params: ";
@@ -138,8 +149,6 @@ void Server::handle_data(int client_index)
         // }
         // std::cout << std::endl;
         // std::cout << "trailing: " << tokenized_message.trailing << std::endl;
-    }
-}
 
 void Server::loop()
 {
