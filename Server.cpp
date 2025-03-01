@@ -122,7 +122,8 @@ void Server::execute_command(struct msg_tokens tokenized_message, int client_ind
 {
     if (tokenized_message.command == "STOP")
         exit(0);
-    client_index = 1;
+    if (tokenized_message.command == "USER")
+        putstr_fd((char *)":server 001 newbie :Welcome to the IRC Network, newbie!~myuser@host\n", this->_client[client_index].get_sockfd());
 }
 
 void Server::handle_data(int client_index)
@@ -167,6 +168,7 @@ void Server::loop()
                 else
                 {
                     this->receive_data(i - 1);
+                    std::cout << "data received" << std::endl;
                     this->handle_data(i - 1);
                 }
             }
