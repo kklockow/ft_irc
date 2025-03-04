@@ -20,7 +20,7 @@ void Server::create_socket()
 {
     this->_sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (this->_sockfd < 0)
-        throw("ERROR opening socket");
+        throw std::invalid_argument ("ERROR opening socket");
 }
 
 void Server::fill_socket_struct()
@@ -32,15 +32,15 @@ void Server::fill_socket_struct()
     this->_server_address.sin_addr.s_addr = INADDR_ANY;
     this->_server_address.sin_port = htons(this->_port);
     if (setsockopt(this->_sockfd, SOL_SOCKET, SO_REUSEADDR, &enabled, sizeof(enabled)) < 0)
-        throw("ERROR on setsockopt");
+        throw std::invalid_argument ("ERROR on setsockopt");
     if (fcntl(this->_sockfd, F_SETFL, O_NONBLOCK) < 0)
-        throw("ERROR on fcntl");
+        throw std::invalid_argument ("ERROR on fcntl");
 }
 
 void Server::bind_server_address()
 {
     if (bind(this->_sockfd, (struct sockaddr *) &this->_server_address, sizeof(this->_server_address)) < 0)
-        throw("ERROR on binding");
+        throw std::invalid_argument ("ERROR on binding");
 }
 
 void Server::init_poll_struct(int fd)
@@ -51,7 +51,7 @@ void Server::init_poll_struct(int fd)
     new_poll.fd = fd;
     new_poll.events = POLLIN;
     new_poll.revents = 0;
-    this->_poll_fd.push_back(new_poll);
+    this->_poll_fd.emplace_back(new_poll);
 }
 
 void Server::init(char **av)
@@ -76,8 +76,8 @@ void Server::accept_client()
     temp_client_len = new_client.get_len();
     new_client.set_sockfd(accept(this->_sockfd, (struct sockaddr *)&temp_client_address, &temp_client_len));
     if (new_client.get_sockfd() < 0)
-        throw("ERROR on accept");
-    this->_client.push_back(new_client);
+        throw std::invalid_argument ("ERROR on accept");
+    this->_client.emplace_back(new_client);
     this->init_poll_struct(new_client.get_sockfd());
 }
 
@@ -89,7 +89,7 @@ void Server::receive_data(int client_index)
     memset(&buffer, 0, sizeof(buffer));
     n = read(this->_client[client_index].get_sockfd(), buffer, 1028);
     if (n < 0)
-        throw("ERROR reading from socket");
+        throw std::invalid_argument ("ERROR reading from socket");
     this->_client[client_index].set_last_message(buffer);
 }
 
@@ -113,7 +113,7 @@ struct msg_tokens Server::parse_message_line(std::string line)
             tokenized_message.trailing.append(trailing_substr);
             break ;
         }
-        tokenized_message.params.push_back(word);
+        tokenized_message.params.emplace_back(word);
     }
     return(tokenized_message);
 }
@@ -156,7 +156,7 @@ void Server::loop()
     while (this->running == true)
     {
         if (poll(&this->_poll_fd[0], this->_poll_fd.size(), -1) == -1)
-            throw("ERROR during poll");
+            throw std::invalid_argument ("ERROR during poll");
         for (size_t i = 0; i < this->_poll_fd.size(); i++)
         {
             if (this->_poll_fd[i].revents & POLLIN && this->running == true)
@@ -177,8 +177,15 @@ void Server::loop()
 
 void Server::end()
 {
+    for (auto &it : this->_client)
+    {
+        close (it.get_sockfd());
+    }
+    this->_client.clear();
+
     for (auto &it : this->_poll_fd)
     {
         close (it.fd);
     }
+    this->_poll_fd.clear();
 }

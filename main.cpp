@@ -13,19 +13,19 @@ int main(int ac, char **av)
         check_input(ac);
         server.init(av);
         server.loop();
-        server.end();
     }
     catch(const std::exception& e)
     {
         std::cerr << e.what() << '\n';
     }
+    server.end();
     return (0);
 }
 
 void     check_input(int ac)
 {
     if (ac != 2)
-        throw("ERROR, no port provided");
+        throw std::invalid_argument ("ERROR, no port provided");
 }
 
 
