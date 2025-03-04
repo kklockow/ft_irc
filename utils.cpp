@@ -10,11 +10,15 @@ void error(std::string message, std::string type)
     exit(1);
 }
 
-int putstr_fd(char *str, int fd)
+int putstr_fd(std::string str, int fd)
 {
-    int n = 0;
+    int len = str.size();
+    int n;
 
-    for (size_t i = 0; i < strlen(str); i++)
-        n += write(fd, &str[i], 1);
+    n = write(fd, str.c_str(), len);
+    if (n != len)
+    {
+        std::cout << "lol somethings wrong" << std::endl;
+    }
     return (n);
 }

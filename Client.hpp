@@ -18,6 +18,7 @@ class Client
         std::string         _nick_name;
         std::string         _last_message;
 
+
     public:
         void                set_sockfd(int new_sockfd);
         int                 get_sockfd();
@@ -30,3 +31,5 @@ class Client
         void                set_last_message(char *message);
         std::string         get_last_message();
 };
+
+

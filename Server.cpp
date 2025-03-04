@@ -76,7 +76,6 @@ void Server::accept_client()
     new_client.set_sockfd(accept(this->_sockfd, (struct sockaddr *)&temp_client_address, &temp_client_len));
     if (new_client.get_sockfd() < 0)
         error("ERROR on accept", "machine");
-
     this->_client.push_back(new_client);
     this->init_poll_struct(new_client.get_sockfd());
 }
@@ -168,7 +167,6 @@ void Server::loop()
                 else
                 {
                     this->receive_data(i - 1);
-                    std::cout << "data received" << std::endl;
                     this->handle_data(i - 1);
                 }
             }
@@ -178,5 +176,8 @@ void Server::loop()
 
 void Server::end()
 {
-    close(this->_sockfd);
+    for (auto &it : this->_client)
+        close (it.get_sockfd());
+    for (auto &it : this->_poll_fd)
+        close (it.fd);
 }

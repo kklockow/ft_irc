@@ -1,0 +1,103 @@
+nsurlstor 13935 kklockow  txt       REG                1,9      32768             7252912 /Users/kklockow/Library/Caches/familycircled/Cache.db-shm
+nsurlstor 13935 kklockow   28u      REG                1,9      53248             7252902 /Users/kklockow/Library/Caches/familycircled/Cache.db
+nsurlstor 13935 kklockow   29u      REG                1,9      74192             7252911 /Users/kklockow/Library/Caches/familycircled/Cache.db-wal
+nsurlstor 13935 kklockow   30u      REG                1,9      32768             7252912 /Users/kklockow/Library/Caches/familycircled/Cache.db-shm
+nsurlstor 13935 kklockow   36u      REG                1,9      53248             7252902 /Users/kklockow/Library/Caches/familycircled/Cache.db
+nsurlstor 13935 kklockow   37u      REG                1,9      74192             7252911 /Users/kklockow/Library/Caches/familycircled/Cache.db-wal
+Keychain  13955 kklockow  txt       REG                1,4      98272 1152921500312642804 /System/Library/CoreServices/Keychain Circle Notification.app/Contents/MacOS/Keychain Circle Notification
+familycir 13985 kklockow  txt       REG                1,4     131584 1152921500312194545 /System/Library/PrivateFrameworks/FamilyCircle.framework/Versions/A/Resources/familycircled
+familycir 13985 kklockow  txt       REG                1,9      32768             7252912 /Users/kklockow/Library/Caches/familycircled/Cache.db-shm
+familycir 13985 kklockow    4u      REG                1,9      53248             7252902 /Users/kklockow/Library/Caches/familycircled/Cache.db
+familycir 13985 kklockow    5u      REG                1,9      74192             7252911 /Users/kklockow/Library/Caches/familycircled/Cache.db-wal
+familycir 13985 kklockow    6u      REG                1,9      32768             7252912 /Users/kklockow/Library/Caches/familycircled/Cache.db-shm
+Code\x20H 14075 kklockow   30r      REG                1,9       1779             7073757 /Users/kklockow/Documents/ft_irc/.vscode/settings.json
+zsh       14097 kklockow  cwd       DIR                1,9        680             7025148 /Users/kklockow/Documents/ft_irc
+Discord   15144 kklockow   19u     unix 0xc50eab8e5d375c79        0t0                     /var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/scoped_dircIkMY4/SingletonSocket
+kvirc     15798 kklockow  cwd       DIR                1,4        928                   2 /
+kvirc     15798 kklockow  txt       REG               46,9    4255228                  66 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/AppTranslocation/FC3297F1-D175-4662-8DA0-CB0FE738BDCF/d/KVIrc.app/Contents/MacOS/kvirc
+kvirc     15798 kklockow  txt       REG               46,9     904516                  67 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/AppTranslocation/FC3297F1-D175-4662-8DA0-CB0FE738BDCF/d/KVIrc.app/Contents/MacOS/libkvilib.4.2.0.dylib
+kvirc     15798 kklockow  txt       REG               46,9     460768                  51 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/AppTranslocation/FC3297F1-D175-4662-8DA0-CB0FE738BDCF/d/KVIrc.app/Contents/Frameworks/QtSvg.framework/Versions/4/QtSvg
+kvirc     15798 kklockow  txt       REG               46,9   32934552                  55 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/AppTranslocation/FC3297F1-D175-4662-8DA0-CB0FE738BDCF/d/KVIrc.app/Contents/Frameworks/QtWebKit.framework/Versions/4/QtWebKit
+kvirc     15798 kklockow  txt       REG               46,9    6498336                  63 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/AppTranslocation/FC3297F1-D175-4662-8DA0-CB0FE738BDCF/d/KVIrc.app/Contents/Frameworks/QtXmlPatterns.framework/Versions/4/QtXmlPatterns
+kvirc     15798 kklockow  txt       REG               46,9   13533704                  39 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/AppTranslocation/FC3297F1-D175-4662-8DA0-CB0FE738BDCF/d/KVIrc.app/Contents/Frameworks/QtGui.framework/Versions/4/QtGui
+kvirc     15798 kklockow  txt       REG               46,9     353856                  59 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/AppTranslocation/FC3297F1-D175-4662-8DA0-CB0FE738BDCF/d/KVIrc.app/Contents/Frameworks/QtXml.framework/Versions/4/QtXml
+kvirc     15798 kklockow  txt       REG               46,9     318896                  47 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/AppTranslocation/FC3297F1-D175-4662-8DA0-CB0FE738BDCF/d/KVIrc.app/Contents/Frameworks/QtSql.framework/Versions/4/QtSql
+kvirc     15798 kklockow  txt       REG               46,9    1699312                  43 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/AppTranslocation/FC3297F1-D175-4662-8DA0-CB0FE738BDCF/d/KVIrc.app/Contents/Frameworks/QtNetwork.framework/Versions/4/QtNetwork
+kvirc     15798 kklockow  txt       REG               46,9    3582344                  30 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/AppTranslocation/FC3297F1-D175-4662-8DA0-CB0FE738BDCF/d/KVIrc.app/Contents/Frameworks/QtCore.framework/Versions/4/QtCore
+kvirc     15798 kklockow  txt       REG               46,9     444880                  26 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/AppTranslocation/FC3297F1-D175-4662-8DA0-CB0FE738BDCF/d/KVIrc.app/Contents/Frameworks/phonon.framework/Versions/4/phonon
+kvirc     15798 kklockow  txt       REG                1,4      28616            20476109 /Library/Preferences/Logging/.plist-cache.Ddb1dfZp
+kvirc     15798 kklockow  txt       REG                1,4     237952            14997754 /private/var/db/timezone/tz/2024a.1.0/icutz/icutz44l.dat
+kvirc     15798 kklockow  txt       REG                1,4    5357568            20703625 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/0/com.apple.LaunchServices.dv/com.apple.LaunchServices-1082-v2.csstore
+kvirc     15798 kklockow  txt       REG                1,4     170592 1152921500312649694 /System/Library/Frameworks/Security.framework/Versions/A/PlugIns/csparser.bundle/Contents/MacOS/csparser
+kvirc     15798 kklockow  txt       REG                1,4    5425091 1152921500312089846 /System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/Resources/Extras2.rsrc
+kvirc     15798 kklockow  txt       REG                1,4    3757752 1152921500311959023 /System/Library/CoreServices/SystemAppearance.bundle/Contents/Resources/SystemAppearance.car
+kvirc     15798 kklockow  txt       REG                1,4      86944 1152921500312083040 /System/Library/Fonts/Supplemental/NotoSansJavanese-Regular.otf
+kvirc     15798 kklockow  txt       REG                1,4      68768 1152921500312082924 /System/Library/Fonts/Supplemental/Wingdings 2.ttf
+kvirc     15798 kklockow  txt       REG                1,4      86384 1152921500312082764 /System/Library/Fonts/Supplemental/Wingdings.ttf
+kvirc     15798 kklockow  txt       REG                1,4      38308 1152921500312082956 /System/Library/Fonts/Supplemental/Wingdings 3.ttf
+kvirc     15798 kklockow  txt       REG                1,4    1572480 1152921500312640813 /usr/lib/dyld
+kvirc     15798 kklockow  txt       REG                1,4   28620288 1152921500311902386 /usr/share/icu/icudt64l.dat
+kvirc     15798 kklockow  txt       REG                1,4    2169148 1152921500312082702 /System/Library/Fonts/SFNS.ttf
+kvirc     15798 kklockow  txt       REG                1,4     416504 1152921500311959011 /System/Library/CoreServices/SystemAppearance.bundle/Contents/Resources/VibrantLightAppearance.car
+kvirc     15798 kklockow  txt       REG                1,4    3406912 1152921500311959021 /System/Library/CoreServices/SystemAppearance.bundle/Contents/Resources/Assets.car
+kvirc     15798 kklockow  txt       REG                1,4     124308 1152921500312082879 /System/Library/Fonts/Supplemental/Webdings.ttf
+kvirc     15798 kklockow  txt       REG                1,4    2353284 1152921500312082648 /System/Library/Fonts/Helvetica.ttc
+kvirc     15798 kklockow  txt       REG               46,9      43464                  83 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/AppTranslocation/FC3297F1-D175-4662-8DA0-CB0FE738BDCF/d/KVIrc.app/Contents/PlugIns/imageformats/libqgif.dylib
+kvirc     15798 kklockow  txt       REG               46,9      45168                  84 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/AppTranslocation/FC3297F1-D175-4662-8DA0-CB0FE738BDCF/d/KVIrc.app/Contents/PlugIns/imageformats/libqico.dylib
+kvirc     15798 kklockow  txt       REG               46,9     278008                  85 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/AppTranslocation/FC3297F1-D175-4662-8DA0-CB0FE738BDCF/d/KVIrc.app/Contents/PlugIns/imageformats/libqjpeg.dylib
+kvirc     15798 kklockow  txt       REG               46,9     412080                  86 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/AppTranslocation/FC3297F1-D175-4662-8DA0-CB0FE738BDCF/d/KVIrc.app/Contents/PlugIns/imageformats/libqmng.dylib
+kvirc     15798 kklockow  txt       REG               46,9      39984                  87 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/AppTranslocation/FC3297F1-D175-4662-8DA0-CB0FE738BDCF/d/KVIrc.app/Contents/PlugIns/imageformats/libqsvg.dylib
+kvirc     15798 kklockow  txt       REG               46,9      34928                  88 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/AppTranslocation/FC3297F1-D175-4662-8DA0-CB0FE738BDCF/d/KVIrc.app/Contents/PlugIns/imageformats/libqtga.dylib
+kvirc     15798 kklockow  txt       REG               46,9     401312                  89 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/AppTranslocation/FC3297F1-D175-4662-8DA0-CB0FE738BDCF/d/KVIrc.app/Contents/PlugIns/imageformats/libqtiff.dylib
+kvirc     15798 kklockow  txt       REG                1,4     149968 1152921500311885487 /usr/lib/libobjc-trampolines.dylib
+kvirc     15798 kklockow  txt       REG                1,4      65536            20657576 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/C/com.kvirc.kvirc/com.apple.metal/3902/libraries.data
+kvirc     15798 kklockow  txt       REG                1,4      65536            20657579 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/C/com.kvirc.kvirc/com.apple.metal/AMD Radeon Pro 5300/functions.data
+kvirc     15798 kklockow  txt       REG                1,4    1074864 1152921500312293677 /System/Library/Keyboard Layouts/AppleKeyboardLayouts.bundle/Contents/Resources/AppleKeyboardLayouts-L.dat
+kvirc     15798 kklockow  txt       REG                1,4     136100             6008300 /System/Library/Caches/com.apple.IntlDataCache.le.kbdx
+kvirc     15798 kklockow  txt       REG                1,4       1052            20703584 /Library/Caches/com.apple.iconservices.store/0A2D225F-0355-3002-A6BD-6E7EF54F8777.isdata
+kvirc     15798 kklockow  txt       REG                1,4       4124            20703585 /Library/Caches/com.apple.iconservices.store/ED0A8E3A-B2D9-3478-9625-769F5E7F8DD2.isdata
+kvirc     15798 kklockow  txt       REG                1,4      43782            20697522 /private/var/db/analyticsd/events.whitelist
+kvirc     15798 kklockow  txt       REG                1,4     593920            20635785 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/C/com.apple.iconservices/store.index
+kvirc     15798 kklockow  txt       REG                1,4      65564             6308253 /Library/Caches/com.apple.iconservices.store/4236BF9D-7B61-30DD-8AF8-34FF213E0AC2.isdata
+kvirc     15798 kklockow  txt       REG                1,4    3200332 1152921500312082641 /System/Library/Fonts/LucidaGrande.ttc
+kvirc     15798 kklockow  txt       REG                1,4    7875588 1152921500312082605 /System/Library/Fonts/ヒラギノ角ゴシック W3.ttc
+kvirc     15798 kklockow  txt       REG                1,4   77081652 1152921500312082594 /System/Library/Fonts/PingFang.ttc
+kvirc     15798 kklockow  txt       REG                1,4    2118332 1152921500312083154 /System/Library/Fonts/Supplemental/Charter.ttc
+kvirc     15798 kklockow  txt       REG                1,4   66933252 1152921500312083022 /System/Library/Fonts/Supplemental/Songti.ttc
+kvirc     15798 kklockow  txt       REG               46,9      60244                1837 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/AppTranslocation/FC3297F1-D175-4662-8DA0-CB0FE738BDCF/d/KVIrc.app/Contents/Resources/modules/libkvitrayicon.so
+kvirc     15798 kklockow  txt       REG               46,9     999304                1809 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/AppTranslocation/FC3297F1-D175-4662-8DA0-CB0FE738BDCF/d/KVIrc.app/Contents/Resources/modules/libkvioptions.so
+kvirc     15798 kklockow  txt       REG               46,9      84068                1780 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/T/AppTranslocation/FC3297F1-D175-4662-8DA0-CB0FE738BDCF/d/KVIrc.app/Contents/Resources/modules/libkvichannelsjoin.so
+kvirc     15798 kklockow  txt       REG                1,4     186188 1152921500312082774 /System/Library/Fonts/Supplemental/Verdana.ttf
+kvirc     15798 kklockow  txt       REG                1,4     174612 1152921500312082960 /System/Library/Fonts/Supplemental/Verdana Italic.ttf
+kvirc     15798 kklockow    0r      CHR                3,2        0t0                 310 /dev/null
+kvirc     15798 kklockow    1u      CHR                3,2        0t0                 310 /dev/null
+kvirc     15798 kklockow    2u      CHR                3,2     0t2255                 310 /dev/null
+kvirc     15798 kklockow    3      PIPE 0xffd43f793c5c98b1      16384                     ->0x351207ec2fc767d2
+kvirc     15798 kklockow    4      PIPE 0x351207ec2fc767d2      16384                     ->0xffd43f793c5c98b1
+kvirc     15798 kklockow    5      PIPE 0x447f4d2a41b8130b      16384                     ->0x21c7f1b6aa6c4fb
+kvirc     15798 kklockow    6      PIPE  0x21c7f1b6aa6c4fb      16384                     ->0x447f4d2a41b8130b
+kvirc     15798 kklockow    7u     unix 0xc50eab8e5d375639        0t0                     ->0xc50eab8e5d375891
+kvirc     15798 kklockow    8u     unix 0xc50eab8e5d375891        0t0                     ->0xc50eab8e5d375639
+kvirc     15798 kklockow    9u      REG                1,9       6448             7273745 /Users/kklockow/Library/Saved Application State/com.kvirc.kvirc.savedState/window_1.data
+kvirc     15798 kklockow   10r      REG                1,4     111033 1152921500312111010 /System/Library/Frameworks/CoreImage.framework/Versions/A/Resources/ci_stdlib.metallib
+kvirc     15798 kklockow   11r      REG                1,4     308316 1152921500312110754 /System/Library/Frameworks/CoreImage.framework/Versions/A/Resources/ci_filters.metallib
+kvirc     15798 kklockow   12u      REG                1,4       1024            20657575 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/C/com.kvirc.kvirc/com.apple.metal/3902/libraries.maps
+kvirc     15798 kklockow   13u      REG                1,4      65536            20657576 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/C/com.kvirc.kvirc/com.apple.metal/3902/libraries.data
+kvirc     15798 kklockow   14u      REG                1,4       1024            20657578 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/C/com.kvirc.kvirc/com.apple.metal/AMD Radeon Pro 5300/functions.maps
+kvirc     15798 kklockow   15u      REG                1,4      65536            20657579 /private/var/folders/zz/zyxvpxvq6csfxvn_n000chkw00344q/C/com.kvirc.kvirc/com.apple.metal/AMD Radeon Pro 5300/functions.data
+kvirc     15798 kklockow   16u      REG                1,9      18992             7274171 /Users/kklockow/Library/Saved Application State/com.kvirc.kvirc.savedState/data.data
+kvirc     15798 kklockow   17w      REG                1,9       2189             7274172 /Users/kklockow/Library/Saved Application State/com.kvirc.kvirc.savedState/windows.plist
+kvirc     15798 kklockow   18      PIPE  0x5bd8f38ce6c28c3      16384                     ->0x221eaef3f5f0fba9
+kvirc     15798 kklockow   19      PIPE 0x221eaef3f5f0fba9      16384                     ->0x5bd8f38ce6c28c3
+kvirc     15798 kklockow   20u     IPv4 0xc50eab8e60a47ab9        0t0                 TCP 1-c-13.42heilbronn.de:52745->icarus.globalgamers.net:6667 (ESTABLISHED)
+kvirc     15798 kklockow   21w      REG                1,9         57             7274675 /Users/kklockow/.config/KVIrc/log/channel_#kvirc.globalgamers_2025.03.04.log
+kvirc     15798 kklockow   22      PIPE 0xe37183e2cc870cf3      16384                     ->0xf5117dab6a69fe52
+kvirc     15798 kklockow   23      PIPE 0xf5117dab6a69fe52      16384                     ->0xe37183e2cc870cf3
+kvirc     15798 kklockow   24w      REG                1,9         57             7274683 /Users/kklockow/.config/KVIrc/log/channel_#lol.globalgamers_2025.03.04.log
+kvirc     15798 kklockow   25u     unix 0xc50eab8e5d375f99        0t0                     ->0xc50eab8e5d375319
+kvirc     15798 kklockow   26w      REG                1,9         57             7274693 /Users/kklockow/.config/KVIrc/log/channel_#das.globalgamers_2025.03.04.log
+kvirc     15798 kklockow   27w      REG                1,9         57             7274695 /Users/kklockow/.config/KVIrc/log/channel_#ds.globalgamers_2025.03.04.log
+kvirc     15798 kklockow   28w      REG                1,9         57             7274697 /Users/kklockow/.config/KVIrc/log/channel_#ka.globalgamers_2025.03.04.log
+lsof      16025 kklockow  cwd       DIR                1,9        680             7025148 /Users/kklockow/Documents/ft_irc
+zsh       16026 kklockow  cwd       DIR                1,9        680             7025148 /Users/kklockow/Documents/ft_irc
+zsh       16026 kklockow    1w      REG                1,9          0             7274727 /Users/kklockow/Documents/ft_irc/out
