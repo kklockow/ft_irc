@@ -120,7 +120,7 @@ struct msg_tokens Server::parse_message_line(std::string line)
 void Server::execute_command(struct msg_tokens tokenized_message, int client_index)
 {
     if (tokenized_message.command == "STOP")
-        exit(0);
+        this->end();
     if (tokenized_message.command == "USER")
         putstr_fd((char *)":server 001 newbie :Welcome to the IRC Network, newbie!~myuser@host\n", this->_client[client_index].get_sockfd());
 }
@@ -176,8 +176,8 @@ void Server::loop()
 
 void Server::end()
 {
-    for (auto &it : this->_client)
-        close (it.get_sockfd());
     for (auto &it : this->_poll_fd)
+    {
         close (it.fd);
+    }
 }
