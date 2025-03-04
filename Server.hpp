@@ -17,6 +17,7 @@
 class Server
 {
     private:
+        bool                            running;
         int                             _sockfd;
         int                             _port;
         struct sockaddr_in              _server_address;

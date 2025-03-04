@@ -8,18 +8,24 @@ int main(int ac, char **av)
 {
     Server server;
 
-    check_input(ac);
-    server.init(av);
-    server.loop();
-    server.end();
-    exit(0);
+    try
+    {
+        check_input(ac);
+        server.init(av);
+        server.loop();
+        server.end();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
     return (0);
 }
 
 void     check_input(int ac)
 {
     if (ac != 2)
-        error("ERROR, no port provided", "human");
+        throw("ERROR, no port provided");
 }
 
 

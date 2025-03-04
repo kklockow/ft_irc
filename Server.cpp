@@ -20,7 +20,7 @@ void Server::create_socket()
 {
     this->_sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (this->_sockfd < 0)
-        error("ERROR opening socket", "machine");
+        throw("ERROR opening socket");
 }
 
 void Server::fill_socket_struct()
@@ -32,15 +32,15 @@ void Server::fill_socket_struct()
     this->_server_address.sin_addr.s_addr = INADDR_ANY;
     this->_server_address.sin_port = htons(this->_port);
     if (setsockopt(this->_sockfd, SOL_SOCKET, SO_REUSEADDR, &enabled, sizeof(enabled)) < 0)
-        error("ERROR on setsockopt", "machine");
+        throw("ERROR on setsockopt");
     if (fcntl(this->_sockfd, F_SETFL, O_NONBLOCK) < 0)
-        error("ERROR on fcntl", "machine");
+        throw("ERROR on fcntl");
 }
 
 void Server::bind_server_address()
 {
     if (bind(this->_sockfd, (struct sockaddr *) &this->_server_address, sizeof(this->_server_address)) < 0)
-        error("ERROR on binding", "machine");
+        throw("ERROR on binding");
 }
 
 void Server::init_poll_struct(int fd)
@@ -62,6 +62,7 @@ void Server::init(char **av)
     this->bind_server_address();
     listen(this->_sockfd, 5);
     this->init_poll_struct(this->_sockfd);
+    this->running = true;
 }
 
 void Server::accept_client()
@@ -75,7 +76,7 @@ void Server::accept_client()
     temp_client_len = new_client.get_len();
     new_client.set_sockfd(accept(this->_sockfd, (struct sockaddr *)&temp_client_address, &temp_client_len));
     if (new_client.get_sockfd() < 0)
-        error("ERROR on accept", "machine");
+        throw("ERROR on accept");
     this->_client.push_back(new_client);
     this->init_poll_struct(new_client.get_sockfd());
 }
@@ -88,7 +89,7 @@ void Server::receive_data(int client_index)
     memset(&buffer, 0, sizeof(buffer));
     n = read(this->_client[client_index].get_sockfd(), buffer, 1028);
     if (n < 0)
-        error("ERROR reading from socket", "machine");
+        throw("ERROR reading from socket");
     this->_client[client_index].set_last_message(buffer);
 }
 
@@ -120,7 +121,7 @@ struct msg_tokens Server::parse_message_line(std::string line)
 void Server::execute_command(struct msg_tokens tokenized_message, int client_index)
 {
     if (tokenized_message.command == "STOP")
-        this->end();
+        this->running = false;
     if (tokenized_message.command == "USER")
         putstr_fd((char *)":server 001 newbie :Welcome to the IRC Network, newbie!~myuser@host\n", this->_client[client_index].get_sockfd());
 }
@@ -152,13 +153,13 @@ void Server::handle_data(int client_index)
 
 void Server::loop()
 {
-    while (1)
+    while (this->running == true)
     {
         if (poll(&this->_poll_fd[0], this->_poll_fd.size(), -1) == -1)
-            error("ERROR during poll", "machine");
+            throw("ERROR during poll");
         for (size_t i = 0; i < this->_poll_fd.size(); i++)
         {
-            if (this->_poll_fd[i].revents & POLLIN)
+            if (this->_poll_fd[i].revents & POLLIN && this->running == true)
             {
                 if (i == 0)
                 {
