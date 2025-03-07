@@ -54,3 +54,13 @@ std::string Client::get_last_message()
 {
     return (this->_last_message);
 }
+
+void Client::set_authenticated(bool flag)
+{
+	this->_authenticated = flag;
+}
+
+bool Client::get_authenticated()
+{
+	return (this->_authenticated);
+}

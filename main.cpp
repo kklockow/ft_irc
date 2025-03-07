@@ -24,8 +24,8 @@ int main(int ac, char **av)
 
 void     check_input(int ac)
 {
-    if (ac != 2)
-        throw std::invalid_argument ("ERROR, no port provided");
+    if (ac != 3)
+        throw std::invalid_argument ("ERROR, provide a port and a password");
 }
 
 

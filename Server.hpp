@@ -23,6 +23,7 @@ class Server
         struct sockaddr_in              _server_address;
         std::vector<Client>             _client;
         std::vector<struct pollfd>      _poll_fd;
+		std::string						_password;
         void                            create_socket();
         void                            fill_socket_struct();
         void                            bind_server_address();
@@ -32,6 +33,7 @@ class Server
         void                            handle_data(int client_index);
         struct msg_tokens               parse_message_line(std::string line);
         void                            execute_command(struct msg_tokens tokenized_message, int client_index);
+		bool							authenticateClient(const msg_tokens &tokenized_message, int client_index);
 
     public:
         int                             get_sockfd();

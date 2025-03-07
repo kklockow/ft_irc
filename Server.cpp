@@ -58,6 +58,7 @@ void Server::init(char **av)
 {
     this->create_socket();
     this->_port = std::atoi(av[1]);
+	this->_password = av[2];
     this->fill_socket_struct();
     this->bind_server_address();
     listen(this->_sockfd, 5);
@@ -120,25 +121,44 @@ struct msg_tokens Server::parse_message_line(std::string line)
 
 void Server::execute_command(struct msg_tokens tokenized_message, int client_index)
 {
-    if (tokenized_message.command == "STOP")
-        this->running = false;
-    if (tokenized_message.command == "USER")
-        putstr_fd((char *)":server 001 newbie :Welcome to the IRC Network, newbie!~myuser@host\n", this->_client[client_index].get_sockfd());
+	if (!this->_client[client_index].get_authenticated() && tokenized_message.command != "PASS")
+	{
+		putstr_fd("ERROR: You must authenticate with PASS first\n", this->_client[client_index].get_sockfd());
+		return;
+	}
+	if (tokenized_message.command == "PASS")
+	{
+		authenticateClient(tokenized_message, client_index);
+		return;
+	}
+	if (tokenized_message.command == "STOP")
+		this->running = false;
+	if (tokenized_message.command == "USER")
+		putstr_fd((char *)":server 001 newbie :Welcome to the IRC Network, newbie!~myuser@host\n", this->_client[client_index].get_sockfd());
+	if (tokenized_message.command == "QUIT")
+	{
+		putstr_fd("Goodbye!\n", this->_client[client_index].get_sockfd());
+		close(this->_client[client_index].get_sockfd());
+		// Remove the client and its pollfd.
+		this->_client.erase(this->_client.begin() + client_index);
+		this->_poll_fd.erase(this->_poll_fd.begin() + client_index + 1);
+		return;
+	}
 }
 
 void Server::handle_data(int client_index)
 {
-    std::stringstream       message_stream(this->_client[client_index].get_last_message());
-    std::string             line;
-    struct msg_tokens       tokenized_message;
+	std::stringstream       message_stream(this->_client[client_index].get_last_message());
+	std::string             line;
+	struct msg_tokens       tokenized_message;
 
-    while (std::getline(message_stream, line))
-    {
-        if (line.empty() || line.back() == '\n')
-            line.pop_back();
-        tokenized_message = this->parse_message_line(line);
-        this->execute_command(tokenized_message, client_index);
-    }
+	while (std::getline(message_stream, line))
+	{
+		if (line.empty() || line.back() == '\n' || line.back() == '\r')
+			line.pop_back();
+		tokenized_message = this->parse_message_line(line);
+		this->execute_command(tokenized_message, client_index);
+	}
 }
 
         // std::cout << "prefix: " << tokenized_message.prefix << std::endl;
@@ -188,4 +208,29 @@ void Server::end()
         close (it.fd);
     }
     this->_poll_fd.clear();
+}
+
+bool Server::authenticateClient(const msg_tokens &tokenized_message, int client_index)
+{
+	std::string password;
+	if (!tokenized_message.params.empty())
+		password = tokenized_message.params[0];
+	else
+		password = tokenized_message.trailing;
+	//std::cout << "Print password:" << password << std::endl;
+	//std::cout << "Print server password:" << this->_password << std::endl;
+	if (password != this->_password)
+	{
+		putstr_fd("ERROR: Password incorrect\n", this->_client[client_index].get_sockfd());
+		close(this->_client[client_index].get_sockfd());
+		this->_client.erase(this->_client.begin() + client_index);
+		this->_poll_fd.erase(this->_poll_fd.begin() + client_index + 1);
+		return false;
+	}
+	else
+	{
+		std::cout << "set authenticated(true)" << std::endl;
+		this->_client[client_index].set_authenticated(true);
+		return true;
+	}
 }
