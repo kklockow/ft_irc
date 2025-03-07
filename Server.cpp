@@ -123,7 +123,7 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
 {
     Channel new_channel;
 
-    //loop trough existing channels
+    //loop through existing channels
     for (unsigned long i = 0; i < this->_channel.size(); i++)
     {
         //if channel already exists
@@ -133,6 +133,8 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
 
             //adding client to channel list
             this->_channel[i].add_client_to_list(this->_client[client_index].get_nick_name());
+
+            //message to client still missing
             return ;
         }
     }
