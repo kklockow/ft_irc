@@ -123,22 +123,27 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
 {
     Channel new_channel;
 
+    //loop trough existing channels
     for (unsigned long i = 0; i < this->_channel.size(); i++)
     {
+        //if channel already exists
         if (tokenized_message.params[0] == this->_channel[i].get_name())
         {
+            //if client already in channel check still needed
+
+            //adding client to channel list
             this->_channel[i].add_client_to_list(this->_client[client_index].get_nick_name());
             return ;
         }
     }
+    //set channelname to first param of message
     new_channel.set_name(tokenized_message.params[0]);
+    //add client to client list of new channel
     new_channel.add_client_to_list(this->_client[client_index].get_nick_name());
+    //add channel to channel vector
     this->_channel.emplace_back(new_channel);
-    // putstr_fd(":", this->_client[client_index].get_sockfd());
-    putstr_fd(this->_client[client_index].get_nick_name(), this->_client[client_index].get_sockfd());
-    putstr_fd(" JOIN ", this->_client[client_index].get_sockfd());
-    putstr_fd(tokenized_message.params[0], this->_client[client_index].get_sockfd());
-    putstr_fd("\n", this->_client[client_index].get_sockfd());
+
+    //proper message and error handling still needed
 }
 
 void Server::execute_command(struct msg_tokens tokenized_message, int client_index)
@@ -160,7 +165,7 @@ void Server::execute_command(struct msg_tokens tokenized_message, int client_ind
 	else if (tokenized_message.command == "STOP")
 		this->running = false;
 	else if (tokenized_message.command == "USER")
-		putstr_fd(":server 001 newbie :Welcome to the IRC Network, newbie!~myuser@host\n", this->_client[client_index].get_sockfd());
+		putstr_fd(":server 001 newbie :Welcome to the IRC Network, newbie!~myuser@localhost\n", this->_client[client_index].get_sockfd());
 	else if (tokenized_message.command == "QUIT")
 	{
 		putstr_fd("Goodbye!\n", this->_client[client_index].get_sockfd());
@@ -177,6 +182,7 @@ void Server::execute_command(struct msg_tokens tokenized_message, int client_ind
     }
     else
     {
+        //code 421 is for command not found not sure about the syntax of the rest
         putstr_fd(":server 421 [", this->_client[client_index].get_sockfd());
         putstr_fd(tokenized_message.command, this->_client[client_index].get_sockfd());
         putstr_fd("] Command not found.\n", this->_client[client_index].get_sockfd());
