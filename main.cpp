@@ -2,7 +2,7 @@
 #include <iostream>
 #include "Server.hpp"
 
-void    check_input(int ac);
+void    check_input(int ac, char **av);
 
 int main(int ac, char **av)
 {
@@ -10,7 +10,7 @@ int main(int ac, char **av)
 
     try
     {
-        check_input(ac);
+        check_input(ac, av);
         server.init(av);
         server.loop();
     }
@@ -22,10 +22,18 @@ int main(int ac, char **av)
     return (0);
 }
 
-void     check_input(int ac)
+void check_input(int ac, char **av)
 {
-    if (ac != 3)
-        throw std::invalid_argument ("ERROR, provide a port and a password");
+	if (ac != 3)
+		throw std::invalid_argument("ERROR, provide a port and a password");
+
+	std::string port_str = av[1];
+	if (port_str.find_first_not_of("0123456789") != std::string::npos)
+		throw std::invalid_argument("ERROR, port must contain only numbers");
+	int port = std::stoi(port_str);
+	// Check the port number range < 1024 are used in the system
+	if (port < 1024 || port > 65535)
+		throw std::invalid_argument("ERROR, port must be between 1024 and 65535");
 }
 
 
