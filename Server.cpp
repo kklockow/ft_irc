@@ -138,6 +138,7 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
             return ;
         }
     }
+    
     //set channelname to first param of message
     new_channel.set_name(tokenized_message.params[0]);
     //add client to client list of new channel
