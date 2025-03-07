@@ -2,7 +2,7 @@ CXX = c++
 NAME = ircserv
 CXXFLAGS = -g3 -std=c++17 -Wall -Werror -Wextra
 
-SOURCE = main.cpp Server.cpp utils.cpp Client.cpp
+SOURCE = main.cpp Server.cpp utils.cpp Client.cpp Channel.cpp
 
 OBJECTS = $(SOURCE:.cpp=.o)
 

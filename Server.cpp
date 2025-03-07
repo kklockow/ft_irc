@@ -119,6 +119,28 @@ struct msg_tokens Server::parse_message_line(std::string line)
     return(tokenized_message);
 }
 
+void Server::commands_join(struct msg_tokens tokenized_message, int client_index)
+{
+    Channel new_channel;
+
+    for (unsigned long i = 0; i < this->_channel.size(); i++)
+    {
+        if (tokenized_message.params[0] == this->_channel[i].get_name())
+        {
+            this->_channel[i].add_client_to_list(this->_client[client_index].get_nick_name());
+            return ;
+        }
+    }
+    new_channel.set_name(tokenized_message.params[0]);
+    new_channel.add_client_to_list(this->_client[client_index].get_nick_name());
+    this->_channel.emplace_back(new_channel);
+    // putstr_fd(":", this->_client[client_index].get_sockfd());
+    putstr_fd(this->_client[client_index].get_nick_name(), this->_client[client_index].get_sockfd());
+    putstr_fd(" JOIN ", this->_client[client_index].get_sockfd());
+    putstr_fd(tokenized_message.params[0], this->_client[client_index].get_sockfd());
+    putstr_fd("\n", this->_client[client_index].get_sockfd());
+}
+
 void Server::execute_command(struct msg_tokens tokenized_message, int client_index)
 {
 	if (!this->_client[client_index].get_authenticated() && tokenized_message.command != "PASS")
@@ -126,24 +148,39 @@ void Server::execute_command(struct msg_tokens tokenized_message, int client_ind
 		putstr_fd("ERROR: You must authenticate with PASS first\n", this->_client[client_index].get_sockfd());
 		return;
 	}
-	if (tokenized_message.command == "PASS")
+	else if (tokenized_message.command == "PASS")
 	{
 		authenticateClient(tokenized_message, client_index);
 		return;
 	}
-	if (tokenized_message.command == "STOP")
+    else if (tokenized_message.command == "JOIN")
+    {
+        this->commands_join(tokenized_message, client_index);
+    }
+	else if (tokenized_message.command == "STOP")
 		this->running = false;
-	if (tokenized_message.command == "USER")
-		putstr_fd((char *)":server 001 newbie :Welcome to the IRC Network, newbie!~myuser@host\n", this->_client[client_index].get_sockfd());
-	if (tokenized_message.command == "QUIT")
+	else if (tokenized_message.command == "USER")
+		putstr_fd(":server 001 newbie :Welcome to the IRC Network, newbie!~myuser@host\n", this->_client[client_index].get_sockfd());
+	else if (tokenized_message.command == "QUIT")
 	{
 		putstr_fd("Goodbye!\n", this->_client[client_index].get_sockfd());
 		close(this->_client[client_index].get_sockfd());
 		// Remove the client and its pollfd.
 		this->_client.erase(this->_client.begin() + client_index);
 		this->_poll_fd.erase(this->_poll_fd.begin() + client_index + 1);
-		return;
+		return ;
 	}
+    else if (tokenized_message.command == "NICK")
+    {
+        this->_client[client_index].set_nick_name(tokenized_message.params[0]);
+        putstr_fd(":server \n", this->_client[client_index].get_sockfd());
+    }
+    else
+    {
+        putstr_fd(":server 421 [", this->_client[client_index].get_sockfd());
+        putstr_fd(tokenized_message.command, this->_client[client_index].get_sockfd());
+        putstr_fd("] Command not found.\n", this->_client[client_index].get_sockfd());
+    }
 }
 
 void Server::handle_data(int client_index)
