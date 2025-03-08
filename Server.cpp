@@ -138,7 +138,7 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
             return ;
         }
     }
-    
+
     //set channelname to first param of message
     new_channel.set_name(tokenized_message.params[0]);
     //add client to client list of new channel
@@ -148,6 +148,10 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
 
     //proper message and error handling still needed
 }
+
+// https://datatracker.ietf.org/doc/html/rfc2812#section-5
+// https://chi.cs.uchicago.edu/chirc/irc_examples.html
+// different newer protocol also works for kvirc
 
 void Server::execute_command(struct msg_tokens tokenized_message, int client_index)
 {
@@ -182,6 +186,14 @@ void Server::execute_command(struct msg_tokens tokenized_message, int client_ind
     {
         this->_client[client_index].set_nick_name(tokenized_message.params[0]);
         putstr_fd(":server \n", this->_client[client_index].get_sockfd());
+    }
+    else if (tokenized_message.command == "PING")
+    {
+        std::cout << "went in" << std::endl;
+        putstr_fd("PONG ", this->_client[client_index].get_sockfd());
+        putstr_fd(tokenized_message.params[0], this->_client[client_index].get_sockfd());
+        putstr_fd(tokenized_message.params[1], this->_client[client_index].get_sockfd());
+        putstr_fd("\n", this->_client[client_index].get_sockfd());
     }
     else
     {
