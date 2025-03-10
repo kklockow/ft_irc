@@ -62,3 +62,13 @@ bool Client::get_authenticated()
 {
 	return (this->_authenticated);
 }
+
+void Client::set_user_name(std::string new_username)
+{
+	this->_user_name = new_username;
+}
+
+std::string Client::get_user_name()
+{
+	return (this->_user_name);
+}

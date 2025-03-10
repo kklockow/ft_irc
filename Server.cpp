@@ -119,9 +119,51 @@ struct msg_tokens Server::parse_message_line(std::string line)
     return(tokenized_message);
 }
 
+int Server::get_client_index_through_name(std::string client_name)
+{
+    for (unsigned int i = 0; i < this->_channel.size(); i++)
+    {
+        if (client_name == this->_channel[i].get_name())
+        {
+            return(i);
+        }
+    }
+    return (-1);
+}
+
+void Server::commands_join_message_clients(std::string channel_name, int client_index)
+{
+    unsigned int                channel_index = 0;
+    std::vector<std::string>    client_list;
+    int                         current_client_index = client_index;
+
+    //basically a get index through name function could be seperate function?
+    for (unsigned int i = 0; i < this->_channel.size(); i++)
+    {
+        if (channel_name == this->_channel[i].get_name())
+        {
+            channel_index = i;
+            break ;
+        }
+    }
+    client_list = this->_channel[channel_index].get_client_list();
+    for (unsigned int i = 0; i < client_list.size(); i++)
+    {
+        current_client_index = get_client_index_through_name(client_list[i]);
+        putstr_fd(this->_client[current_client_index].get_nick_name(), this->_client[current_client_index ].get_sockfd());
+        putstr_fd("!", this->_client[current_client_index ].get_sockfd());
+        putstr_fd(this->_client[current_client_index ].get_user_name(), this->_client[current_client_index ].get_sockfd());
+        putstr_fd("@localhost ", this->_client[current_client_index ].get_sockfd());
+        putstr_fd("JOIN #", this->_client[current_client_index ].get_sockfd());
+        putstr_fd(channel_name, this->_client[current_client_index ].get_sockfd());
+        putstr_fd("\n", this->_client[current_client_index ].get_sockfd());
+    }
+}
+
 void Server::commands_join(struct msg_tokens tokenized_message, int client_index)
 {
     Channel new_channel;
+    bool    channel_already_exists = false;
 
     //loop through existing channels
     for (unsigned long i = 0; i < this->_channel.size(); i++)
@@ -130,25 +172,45 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
         if (tokenized_message.params[0] == this->_channel[i].get_name())
         {
             //if client already in channel check still needed
-
+            //set flag for aleady existing channel
+            channel_already_exists = true;
             //adding client to channel list
             this->_channel[i].add_client_to_list(this->_client[client_index].get_nick_name());
-
             //message to client still missing
-            return ;
+            this->commands_join_message_clients(tokenized_message.params[0], client_index);
         }
     }
+    if (channel_already_exists == false)
+    {
+        //set channelname to first param of message
+        new_channel.set_name(tokenized_message.params[0]);
+        //add client to client list of new channel
+        new_channel.add_client_to_list(this->_client[client_index].get_nick_name());
+        //add channel to channel vector
+        this->_channel.emplace_back(new_channel);
+    }
 
-    //set channelname to first param of message
-    new_channel.set_name(tokenized_message.params[0]);
-    //add client to client list of new channel
-    new_channel.add_client_to_list(this->_client[client_index].get_nick_name());
-    //add channel to channel vector
-    this->_channel.emplace_back(new_channel);
-
+    //332 channel description
+    //353 names list
+    //366 end of names list
+    putstr_fd("\n", this->_client[client_index].get_sockfd());
     //proper message and error handling still needed
 }
 
+void Server::commands_user(struct msg_tokens tokenized_message, int client_index)
+{
+    //check for already taken username still missing
+
+    this->_client[client_index].set_user_name(tokenized_message.trailing);
+
+    putstr_fd(":server 001 ", this->_client[client_index].get_sockfd());
+    putstr_fd(this->_client[client_index].get_nick_name(), this->_client[client_index].get_sockfd());
+    putstr_fd(" :Welcome to the IRC Network ", this->_client[client_index].get_sockfd());
+    putstr_fd(this->_client[client_index].get_nick_name(), this->_client[client_index].get_sockfd());
+    putstr_fd("!", this->_client[client_index].get_sockfd());
+    putstr_fd(this->_client[client_index].get_user_name(), this->_client[client_index].get_sockfd());
+    putstr_fd("@localhost\n", this->_client[client_index].get_sockfd());
+}
 // https://datatracker.ietf.org/doc/html/rfc2812#section-5
 // https://chi.cs.uchicago.edu/chirc/irc_examples.html
 // different newer protocol also works for kvirc
@@ -172,7 +234,9 @@ void Server::execute_command(struct msg_tokens tokenized_message, int client_ind
 	else if (tokenized_message.command == "STOP")
 		this->running = false;
 	else if (tokenized_message.command == "USER")
-		putstr_fd(":server 001 newbie :Welcome to the IRC Network, newbie!~myuser@localhost\n", this->_client[client_index].get_sockfd());
+	{
+        this->commands_user(tokenized_message, client_index);
+    }
 	else if (tokenized_message.command == "QUIT")
 	{
 		putstr_fd("Goodbye!\n", this->_client[client_index].get_sockfd());

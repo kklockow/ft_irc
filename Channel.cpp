@@ -24,3 +24,8 @@ void Channel::remove_client_from_list(std::string client_name)
             it.erase();
     }
 }
+
+std::vector<std::string> Channel::get_client_list()
+{
+    return (this->_client);
+}

@@ -17,6 +17,7 @@ class Client
         socklen_t           _client_len;
         std::string         _nick_name;
         std::string         _last_message;
+        std::string         _user_name;
 		bool				_authenticated;
 
 
@@ -33,6 +34,8 @@ class Client
         std::string         get_last_message();
 		void				set_authenticated(bool flag);
 		bool				get_authenticated();
+        void                set_user_name(std::string new_username);
+        std::string         get_user_name();
 };
 
 
