@@ -221,9 +221,44 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
     //proper message and error handling still needed
 }
 
+void Server::commands_nick(struct msg_tokens tokenized_message, int client_index)
+{
+    int current_client_fd;
+
+    for (unsigned int i = 0; i < this->_client.size(); i++)
+    {
+        if (tokenized_message.params[0] == this->_client[i].get_nick_name())
+        {
+            putstr_fd("nickname already in use sry bruh\n", this->_client[i].get_sockfd());
+            return ;
+        }
+    }
+    for (unsigned int i = 0; i < this->_client.size(); i++)
+    {
+        current_client_fd = this->_client[i].get_sockfd();
+        putstr_fd(":", current_client_fd);
+        putstr_fd(this->_client[client_index].get_nick_name(), current_client_fd);
+        putstr_fd("!", current_client_fd);
+        putstr_fd(this->_client[client_index].get_user_name(), current_client_fd);
+        putstr_fd("@localhost NICK :", current_client_fd);
+        putstr_fd(tokenized_message.params[0], current_client_fd);
+        putstr_fd("\n", current_client_fd);
+    }
+    this->_client[client_index].set_nick_name(tokenized_message.params[0]);
+}
+
 void Server::commands_user(struct msg_tokens tokenized_message, int client_index)
 {
     //check for already taken username still missing
+
+    for (unsigned int i = 0; i < this->_client.size(); i++)
+    {
+        if (tokenized_message.params[0] == this->_client[i].get_user_name())
+        {
+            putstr_fd("username already in use sry bruh\n", this->_client[i].get_sockfd());
+            return ;
+        }
+    }
 
     this->_client[client_index].set_user_name(tokenized_message.params[0]);
 
@@ -272,8 +307,7 @@ void Server::execute_command(struct msg_tokens tokenized_message, int client_ind
 	}
     else if (tokenized_message.command == "NICK")
     {
-        this->_client[client_index].set_nick_name(tokenized_message.params[0]);
-        putstr_fd(":server \n", this->_client[client_index].get_sockfd());
+        this->commands_nick(tokenized_message, client_index);
     }
     else if (tokenized_message.command == "PING")
     {

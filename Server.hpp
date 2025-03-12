@@ -39,6 +39,7 @@ class Server
         void                            commands_join(struct msg_tokens tokenized_message, int client_index);
         void                            commands_join_message_clients(std::string channel_name);
         void                            commands_user(struct msg_tokens tokenized_message, int client_index);
+        void                            commands_nick(struct msg_tokens tokenized_message, int client_index);
         int                             get_client_index_through_name(std::string client_name);
         int                             get_channel_index_through_name(std::string channel_name);
 
