@@ -101,7 +101,7 @@ struct msg_tokens Server::parse_message_line(std::string line)
     std::string                 trailing_substr;
     struct msg_tokens           tokenized_message;
 
-    std::cout << "Line to be parsed: " << line << std::endl;
+    // std::cout << "Line to be parsed: " << line << std::endl;
     if (!line.empty() && line[0] == ':')
         line_stream >> tokenized_message.prefix;
     line_stream >> tokenized_message.command;
@@ -121,40 +121,42 @@ struct msg_tokens Server::parse_message_line(std::string line)
 
 int Server::get_client_index_through_name(std::string client_name)
 {
-    for (unsigned int i = 0; i < this->_channel.size(); i++)
+    for (unsigned int i = 0; i < this->_client.size(); i++)
     {
-        if (client_name == this->_channel[i].get_name())
-        {
+        if (client_name == this->_client[i].get_nick_name())
             return(i);
-        }
     }
     return (-1);
 }
 
-void Server::commands_join_message_clients(std::string channel_name, int client_index)
+int Server::get_channel_index_through_name(std::string channel_name)
 {
-    unsigned int                channel_index = 0;
-    std::vector<std::string>    client_list;
-    int                         current_client_index = client_index;
-
-    //basically a get index through name function could be seperate function?
     for (unsigned int i = 0; i < this->_channel.size(); i++)
     {
         if (channel_name == this->_channel[i].get_name())
-        {
-            channel_index = i;
-            break ;
-        }
+            return (i);
     }
+    return (-1);
+}
+
+void Server::commands_join_message_clients(std::string channel_name)
+{
+    unsigned int                channel_index = 0;
+    std::vector<std::string>    client_list;
+    int                         current_client_index = 0;
+
+    channel_index = this->get_channel_index_through_name(channel_name);
     client_list = this->_channel[channel_index].get_client_list();
     for (unsigned int i = 0; i < client_list.size(); i++)
     {
         current_client_index = get_client_index_through_name(client_list[i]);
-        putstr_fd(this->_client[current_client_index].get_nick_name(), this->_client[current_client_index ].get_sockfd());
-        putstr_fd("!", this->_client[current_client_index ].get_sockfd());
+
+        putstr_fd(":", this->_client[current_client_index].get_sockfd());
+        putstr_fd(this->_client[current_client_index].get_nick_name(), this->_client[current_client_index].get_sockfd());
+        putstr_fd("!", this->_client[current_client_index].get_sockfd());
         putstr_fd(this->_client[current_client_index ].get_user_name(), this->_client[current_client_index ].get_sockfd());
         putstr_fd("@localhost ", this->_client[current_client_index ].get_sockfd());
-        putstr_fd("JOIN #", this->_client[current_client_index ].get_sockfd());
+        putstr_fd("JOIN ", this->_client[current_client_index ].get_sockfd());
         putstr_fd(channel_name, this->_client[current_client_index ].get_sockfd());
         putstr_fd("\n", this->_client[current_client_index ].get_sockfd());
     }
@@ -177,7 +179,6 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
             //adding client to channel list
             this->_channel[i].add_client_to_list(this->_client[client_index].get_nick_name());
             //message to client still missing
-            this->commands_join_message_clients(tokenized_message.params[0], client_index);
         }
     }
     if (channel_already_exists == false)
@@ -189,11 +190,34 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
         //add channel to channel vector
         this->_channel.emplace_back(new_channel);
     }
-
-    //332 channel description
-    //353 names list
-    //366 end of names list
+    this->commands_join_message_clients(tokenized_message.params[0]);
+    //will putstr channel description later or error when no channeldescription
+    putstr_fd(":server 332 ", this->_client[client_index].get_sockfd());
+    putstr_fd(this->_client[client_index].get_nick_name(), this->_client[client_index].get_sockfd());
+    putstr_fd(" ", this->_client[client_index].get_sockfd());
+    putstr_fd(tokenized_message.params[0], this->_client[client_index].get_sockfd());
+    putstr_fd(" :Hi bin die description\n", this->_client[client_index].get_sockfd());
+    // write a list of all clients in channel to new joined client
+    putstr_fd(":server 353 ", this->_client[client_index].get_sockfd());
+    putstr_fd(this->_client[client_index].get_nick_name(), this->_client[client_index].get_sockfd());
+    putstr_fd(" ", this->_client[client_index].get_sockfd());
+    putstr_fd(tokenized_message.params[0], this->_client[client_index].get_sockfd());
+    putstr_fd(" :", this->_client[client_index].get_sockfd());
+    int channel_index = this->get_channel_index_through_name(tokenized_message.params[0]);
+    std::vector<std::string> client_list = this->_channel[channel_index].get_client_list();
+    for (unsigned int i = 0; i < client_list.size(); i++)
+    {
+        putstr_fd(client_list[i], this->_client[client_index].get_sockfd());
+        putstr_fd(" ", this->_client[client_index].get_sockfd());
+    }
     putstr_fd("\n", this->_client[client_index].get_sockfd());
+
+    //write end of names list to client
+    putstr_fd(":server 366 ", this->_client[client_index].get_sockfd());
+    putstr_fd(this->_client[client_index].get_nick_name(), this->_client[client_index].get_sockfd());
+    putstr_fd(" ", this->_client[client_index].get_sockfd());
+    putstr_fd(tokenized_message.params[0], this->_client[client_index].get_sockfd());
+    putstr_fd(" :End of /NAMES list\n", this->_client[client_index].get_sockfd());
     //proper message and error handling still needed
 }
 
@@ -201,7 +225,7 @@ void Server::commands_user(struct msg_tokens tokenized_message, int client_index
 {
     //check for already taken username still missing
 
-    this->_client[client_index].set_user_name(tokenized_message.trailing);
+    this->_client[client_index].set_user_name(tokenized_message.params[0]);
 
     putstr_fd(":server 001 ", this->_client[client_index].get_sockfd());
     putstr_fd(this->_client[client_index].get_nick_name(), this->_client[client_index].get_sockfd());
@@ -217,7 +241,7 @@ void Server::commands_user(struct msg_tokens tokenized_message, int client_index
 
 void Server::execute_command(struct msg_tokens tokenized_message, int client_index)
 {
-	if (!this->_client[client_index].get_authenticated() && tokenized_message.command != "PASS")
+    if (!this->_client[client_index].get_authenticated() && tokenized_message.command != "PASS")
 	{
 		putstr_fd("ERROR: You must authenticate with PASS first\n", this->_client[client_index].get_sockfd());
 		return;
