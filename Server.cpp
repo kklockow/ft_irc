@@ -334,10 +334,13 @@ void Server::handle_data(int client_index)
 
 	while (std::getline(message_stream, line))
 	{
-		if (line.empty() || line.back() == '\n' || line.back() == '\r')
+		if (!line.empty() && (line.back() == '\n' || line.back() == '\r'))
 			line.pop_back();
-		tokenized_message = this->parse_message_line(line);
-		this->execute_command(tokenized_message, client_index);
+		if (!line.empty())
+		{
+			tokenized_message = this->parse_message_line(line);
+			this->execute_command(tokenized_message, client_index);
+		}
 	}
 }
 
