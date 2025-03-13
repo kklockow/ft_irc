@@ -90,6 +90,8 @@ void Server::accept_client()
     this->init_poll_struct(new_client.get_sockfd());
 }
 
+
+//not a fatal error should not quit whole server
 void Server::receive_data(int client_index)
 {
     char    buffer[1028];
@@ -160,14 +162,14 @@ void Server::commands_join_message_clients(std::string channel_name)
     {
         current_client_index = get_client_index_through_name(client_list[i]);
 
-        putstr_fd(":", this->_client[current_client_index].get_sockfd());
-        putstr_fd(this->_client[current_client_index].get_nick_name(), this->_client[current_client_index].get_sockfd());
-        putstr_fd("!", this->_client[current_client_index].get_sockfd());
-        putstr_fd(this->_client[current_client_index ].get_user_name(), this->_client[current_client_index ].get_sockfd());
-        putstr_fd("@localhost ", this->_client[current_client_index ].get_sockfd());
-        putstr_fd("JOIN ", this->_client[current_client_index ].get_sockfd());
-        putstr_fd(channel_name, this->_client[current_client_index ].get_sockfd());
-        putstr_fd("\n", this->_client[current_client_index ].get_sockfd());
+        std::string message_to_clients =    ":"
+                                            + this->_client[current_client_index].get_nick_name()
+                                            + "!"
+                                            + this->_client[current_client_index].get_user_name()
+                                            + "@localhost JOIN "
+                                            + channel_name
+                                            + "\n";
+        putstr_fd(message_to_clients, this->_client[current_client_index ].get_sockfd());
     }
 }
 
@@ -298,6 +300,58 @@ void Server::commands_user(struct msg_tokens tokenized_message, int client_index
 // https://chi.cs.uchicago.edu/chirc/irc_examples.html
 // different newer protocol also works for kvirc
 
+void Server::commands_message(struct msg_tokens tokenized_message, int client_index)
+{
+    if (tokenized_message.params.empty() || tokenized_message.params[0].empty())
+    {
+        putstr_fd(":server 461 PRIVMSG :Not enough parameters\n", this->_client[client_index].get_sockfd());
+        return ;
+    }
+    if (tokenized_message.params[0][0] == '#')
+    {
+    //channel
+        int channel_index = this->get_channel_index_through_name(tokenized_message.params[0]);
+
+        //if channel doesnt exist
+        if (channel_index == -1)
+            std::cout << "----------------channel doesnt exist" << std::endl;
+
+        std::vector<std::string> client_list =  this->_channel[channel_index].get_client_list();
+        for (unsigned int i = 0; i < client_list.size(); i++)
+        {
+            int current_client_index = this->get_client_index_through_name(client_list[i]);
+            if (current_client_index != client_index)
+            {
+                std::string message =   ":"
+                                        + this->_client[current_client_index].get_nick_name()
+                                        + "!"
+                                        + this->_client[current_client_index].get_user_name()
+                                        + "@localhost PRIVMSG "
+                                        + tokenized_message.params[0]
+                                        + " :"
+                                        + tokenized_message.trailing
+                                        + "\n";
+                putstr_fd(message, this->_client[current_client_index].get_sockfd());
+            }
+        }
+    }
+    else
+    {
+        int current_client_index = this->get_client_index_through_name(tokenized_message.params[0]);
+        std::string message =   ":"
+                                + this->_client[current_client_index].get_nick_name()
+                                + "!"
+                                + this->_client[current_client_index].get_user_name()
+                                + "@localhost PRIVMSG "
+                                + tokenized_message.params[0]
+                                + " :"
+                                + tokenized_message.trailing
+                                + "\n";
+        putstr_fd(message, this->_client[current_client_index].get_sockfd());
+    }
+}
+
+
 void Server::execute_command(struct msg_tokens tokenized_message, int client_index)
 {
     if (std::isdigit(tokenized_message.command[0]))
@@ -324,6 +378,8 @@ void Server::execute_command(struct msg_tokens tokenized_message, int client_ind
         this->commands_nick(tokenized_message, client_index);
     else if (tokenized_message.command == "USER")
         this->commands_user(tokenized_message, client_index);
+    else if (tokenized_message.command == "PRIVMSG")
+        this->commands_message(tokenized_message, client_index);
     else if (tokenized_message.command == "PING")
     {
         putstr_fd(":server PONG ", this->_client[client_index].get_sockfd());

@@ -1,6 +1,6 @@
 CXX = c++
 NAME = ircserv
-CXXFLAGS = -g3 -std=c++17 -Wall -Werror -Wextra
+CXXFLAGS = -fsanitize=address -g3 -std=c++17 -Wall -Werror -Wextra
 
 SOURCE = main.cpp Server.cpp utils.cpp Client.cpp Channel.cpp
 
