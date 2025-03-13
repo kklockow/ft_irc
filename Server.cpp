@@ -1,6 +1,14 @@
 
 #include "Server.hpp"
 
+Server::msg_tokens Server::error_message(std::string error_code, std::string message)
+{
+    msg_tokens error_message;
+    error_message.command = error_code;
+    error_message.params.push_back(message);
+    return (error_message);
+}
+
 int Server::get_sockfd()
 {
     return (this->_sockfd);
@@ -94,29 +102,31 @@ void Server::receive_data(int client_index)
     this->_client[client_index].set_last_message(buffer);
 }
 
-struct msg_tokens Server::parse_message_line(std::string line)
+Server::msg_tokens Server::parse_message_line(std::string line)
 {
     std::stringstream           line_stream(line);
     std::string                 word;
     std::string                 trailing_substr;
     struct msg_tokens           tokenized_message;
 
-    // std::cout << "Line to be parsed: " << line << std::endl;
-    if (!line.empty() && line[0] == ':')
+	if (line.empty())
+	return (error_message("421", "Unknown"));
+    // std::cout << "Line to be parsed: " << line << std::endl; // debug
+    if (line[0] == ':')
         line_stream >> tokenized_message.prefix;
-    line_stream >> tokenized_message.command;
+    if (!(line_stream >> tokenized_message.command))
+		return (error_message("421", "Unknown"));
     while (line_stream >> word)
     {
         if (word[0] == ':')
         {
             std::getline(line_stream, trailing_substr);
-            tokenized_message.trailing = word.substr(1);
-            tokenized_message.trailing.append(trailing_substr);
+            tokenized_message.trailing = word.substr(1) + trailing_substr;
             break ;
         }
         tokenized_message.params.emplace_back(word);
     }
-    return(tokenized_message);
+    return (tokenized_message);
 }
 
 int Server::get_client_index_through_name(std::string client_name)
@@ -276,55 +286,44 @@ void Server::commands_user(struct msg_tokens tokenized_message, int client_index
 
 void Server::execute_command(struct msg_tokens tokenized_message, int client_index)
 {
+    if (std::isdigit(tokenized_message.command[0]))
+    {
+        putstr_fd(":server ", this->_client[client_index].get_sockfd());
+        putstr_fd(tokenized_message.command, this->_client[client_index].get_sockfd());
+        putstr_fd(" ", this->_client[client_index].get_sockfd());
+        putstr_fd(this->_client[client_index].get_nick_name(), this->_client[client_index].get_sockfd());
+        putstr_fd(" :", this->_client[client_index].get_sockfd());
+        putstr_fd(tokenized_message.params[0], this->_client[client_index].get_sockfd());
+        putstr_fd("\n", this->_client[client_index].get_sockfd());
+        return ;
+    }
     if (!this->_client[client_index].get_authenticated() && tokenized_message.command != "PASS")
-	{
-		putstr_fd("ERROR: You must authenticate with PASS first\n", this->_client[client_index].get_sockfd());
-		return;
-	}
-	else if (tokenized_message.command == "PASS")
-	{
-		authenticateClient(tokenized_message, client_index);
-		return;
-	}
+    {
+        execute_command(error_message("464", "Password required"), client_index);
+        return ;
+    }
+    if (tokenized_message.command == "PASS")
+        authenticateClient(tokenized_message, client_index);
     else if (tokenized_message.command == "JOIN")
-    {
         this->commands_join(tokenized_message, client_index);
-    }
-	else if (tokenized_message.command == "STOP")
-		this->running = false;
-	else if (tokenized_message.command == "USER")
-	{
-        this->commands_user(tokenized_message, client_index);
-    }
-	else if (tokenized_message.command == "QUIT")
-	{
-		putstr_fd("Goodbye!\n", this->_client[client_index].get_sockfd());
-		close(this->_client[client_index].get_sockfd());
-		// Remove the client and its pollfd.
-		this->_client.erase(this->_client.begin() + client_index);
-		this->_poll_fd.erase(this->_poll_fd.begin() + client_index + 1);
-		return ;
-	}
     else if (tokenized_message.command == "NICK")
-    {
         this->commands_nick(tokenized_message, client_index);
-    }
+    else if (tokenized_message.command == "USER")
+        this->commands_user(tokenized_message, client_index);
     else if (tokenized_message.command == "PING")
     {
-        std::cout << "went in" << std::endl;
-        putstr_fd("PONG ", this->_client[client_index].get_sockfd());
-        putstr_fd(tokenized_message.params[0], this->_client[client_index].get_sockfd());
-        putstr_fd(tokenized_message.params[1], this->_client[client_index].get_sockfd());
-        putstr_fd("\n", this->_client[client_index].get_sockfd());
+        putstr_fd(":server PONG ", this->_client[client_index].get_sockfd());
+		if (tokenized_message.params.empty())
+			putstr_fd("server", this->_client[client_index].get_sockfd());
+		else
+			putstr_fd(tokenized_message.params[0], this->_client[client_index].get_sockfd());
+		putstr_fd("\n", this->_client[client_index].get_sockfd());
     }
     else
-    {
-        //code 421 is for command not found not sure about the syntax of the rest
-        putstr_fd(":server 421 [", this->_client[client_index].get_sockfd());
-        putstr_fd(tokenized_message.command, this->_client[client_index].get_sockfd());
-        putstr_fd("] Command not found.\n", this->_client[client_index].get_sockfd());
-    }
+        execute_command(error_message("421", "Unknown command"), client_index);
 }
+
+
 
 void Server::handle_data(int client_index)
 {
@@ -408,12 +407,12 @@ bool Server::authenticateClient(const msg_tokens &tokenized_message, int client_
 		close(this->_client[client_index].get_sockfd());
 		this->_client.erase(this->_client.begin() + client_index);
 		this->_poll_fd.erase(this->_poll_fd.begin() + client_index + 1);
-		return false;
+		return (false);
 	}
 	else
 	{
 		std::cout << "set authenticated(true)" << std::endl;
 		this->_client[client_index].set_authenticated(true);
-		return true;
+		return (true);
 	}
 }

@@ -18,6 +18,14 @@
 class Server
 {
     private:
+		struct msg_tokens
+		{
+			std::string                 prefix;
+			std::string                 command;
+			std::vector<std::string>    params;
+			std::string                 trailing;
+		};
+
         bool                            running;
         int                             _sockfd;
         int                             _port;
@@ -33,7 +41,7 @@ class Server
         void                            accept_client();
         void                            receive_data(int client_index);
         void                            handle_data(int client_index);
-        struct msg_tokens               parse_message_line(std::string line);
+        msg_tokens                      parse_message_line(std::string line);
         void                            execute_command(struct msg_tokens tokenized_message, int client_index);
 		bool							authenticateClient(const msg_tokens &tokenized_message, int client_index);
         void                            commands_join(struct msg_tokens tokenized_message, int client_index);
@@ -42,6 +50,7 @@ class Server
         void                            commands_nick(struct msg_tokens tokenized_message, int client_index);
         int                             get_client_index_through_name(std::string client_name);
         int                             get_channel_index_through_name(std::string channel_name);
+		msg_tokens                      error_message(std::string error_code, std::string message);
 
     public:
         int                             get_sockfd();
