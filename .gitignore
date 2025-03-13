@@ -1,0 +1,6 @@
+.vscode
+ircserv
+main.o
+Server.o
+Channel.o
+Client.o
