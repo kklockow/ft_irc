@@ -255,20 +255,25 @@ void Server::commands_nick(struct msg_tokens tokenized_message, int client_index
     {
         if (tokenized_message.params[0] == this->_client[i].get_nick_name())
         {
-            putstr_fd("nickname already in use sry bruh\n", this->_client[i].get_sockfd());
+            std::string already_in_use_message =    "433 <nickname> :"
+                                                    + tokenized_message.params[0]
+                                                    + " is already in use\n";
+
+            putstr_fd(already_in_use_message, this->_client[i].get_sockfd());
             return ;
         }
     }
     for (unsigned int i = 0; i < this->_client.size(); i++)
     {
         current_client_fd = this->_client[i].get_sockfd();
-        putstr_fd(":", current_client_fd);
-        putstr_fd(this->_client[client_index].get_nick_name(), current_client_fd);
-        putstr_fd("!", current_client_fd);
-        putstr_fd(this->_client[client_index].get_user_name(), current_client_fd);
-        putstr_fd("@localhost NICK :", current_client_fd);
-        putstr_fd(tokenized_message.params[0], current_client_fd);
-        putstr_fd("\n", current_client_fd);
+        std::string server_answer = ":"
+                                    + this->_client[client_index].get_nick_name()
+                                    + "!"
+                                    + this->_client[client_index].get_user_name()
+                                    + "@localhost NICK :"
+                                    + tokenized_message.params[0]
+                                    + "\n";
+        putstr_fd(server_answer, current_client_fd);
     }
     this->_client[client_index].set_nick_name(tokenized_message.params[0]);
 }
@@ -281,20 +286,26 @@ void Server::commands_user(struct msg_tokens tokenized_message, int client_index
     {
         if (tokenized_message.params[0] == this->_client[i].get_user_name())
         {
-            putstr_fd("username already in use sry bruh\n", this->_client[i].get_sockfd());
+            std::string already_in_use_message =    "466 <username> :"
+                                                    + tokenized_message.params[0]
+                                                    + " is already in use\n";
+
+            putstr_fd(already_in_use_message, this->_client[i].get_sockfd());
             return ;
         }
     }
 
     this->_client[client_index].set_user_name(tokenized_message.params[0]);
 
-    putstr_fd(":server 001 ", this->_client[client_index].get_sockfd());
-    putstr_fd(this->_client[client_index].get_nick_name(), this->_client[client_index].get_sockfd());
-    putstr_fd(" :Welcome to the IRC Network ", this->_client[client_index].get_sockfd());
-    putstr_fd(this->_client[client_index].get_nick_name(), this->_client[client_index].get_sockfd());
-    putstr_fd("!", this->_client[client_index].get_sockfd());
-    putstr_fd(this->_client[client_index].get_user_name(), this->_client[client_index].get_sockfd());
-    putstr_fd("@localhost\n", this->_client[client_index].get_sockfd());
+    std::string welcome_message =   ":server 001 "
+                                    + this->_client[client_index].get_nick_name()
+                                    + " :Welcome to the IRC Network "
+                                    + this->_client[client_index].get_nick_name()
+                                    + "!"
+                                    + this->_client[client_index].get_user_name()
+                                    + "@localhost\n";
+
+    putstr_fd(welcome_message, this->_client[client_index].get_sockfd());
 }
 // https://datatracker.ietf.org/doc/html/rfc2812#section-5
 // https://chi.cs.uchicago.edu/chirc/irc_examples.html
@@ -314,7 +325,12 @@ void Server::commands_message(struct msg_tokens tokenized_message, int client_in
 
         //if channel doesnt exist
         if (channel_index == -1)
-            std::cout << "----------------channel doesnt exist" << std::endl;
+        {
+            std::string server_message =    "403 "
+                                            + tokenized_message.params[0]
+                                            + ":No such channel\n";
+            putstr_fd(server_message, this->_client[client_index].get_sockfd());
+        }
 
         std::vector<std::string> client_list =  this->_channel[channel_index].get_client_list();
         for (unsigned int i = 0; i < client_list.size(); i++)
@@ -337,17 +353,28 @@ void Server::commands_message(struct msg_tokens tokenized_message, int client_in
     }
     else
     {
-        int current_client_index = this->get_client_index_through_name(tokenized_message.params[0]);
+    //user
+        int receiver_client_index = this->get_client_index_through_name(tokenized_message.params[0]);
+
+        //if user doesnt exist
+        if (receiver_client_index == -1)
+        {
+            std::string server_message =    "401 "
+                                            + tokenized_message.params[0]
+                                            + ":No such nick\n";
+            putstr_fd(server_message, this->_client[client_index].get_sockfd());
+        }
+
         std::string message =   ":"
-                                + this->_client[current_client_index].get_nick_name()
+                                + this->_client[receiver_client_index].get_nick_name()
                                 + "!"
-                                + this->_client[current_client_index].get_user_name()
+                                + this->_client[receiver_client_index].get_user_name()
                                 + "@localhost PRIVMSG "
                                 + tokenized_message.params[0]
                                 + " :"
                                 + tokenized_message.trailing
                                 + "\n";
-        putstr_fd(message, this->_client[current_client_index].get_sockfd());
+        putstr_fd(message, this->_client[receiver_client_index].get_sockfd());
     }
 }
 
