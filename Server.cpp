@@ -173,12 +173,33 @@ void Server::commands_join_message_clients(std::string channel_name)
 
 void Server::commands_join(struct msg_tokens tokenized_message, int client_index)
 {
-    Channel new_channel;
-    int     channel_index;
+    Channel                     new_channel;
+    int                         channel_index;
+    std::vector<std::string>    client_list;
+
+
+    if (tokenized_message.params.empty() || tokenized_message.params[0].empty())
+    {
+        putstr_fd(":server 461 JOIN :Not enough parameters\n", this->_client[client_index].get_sockfd());
+        return ;
+    }
 
     channel_index = this->get_channel_index_through_name(tokenized_message.params[0]);
     if (channel_index != -1)
+    {
+        client_list = this->_channel[channel_index].get_client_list();
+        for (unsigned int i = 0; i < client_list.size(); i++)
+        {
+            if (client_list[i] == this->_client[client_index].get_nick_name())
+            {
+                putstr_fd(":server 443 " + this->_client[client_index].get_nick_name() + " "
+                        + tokenized_message.params[0] + " :You're already in this channel\n",
+                        this->_client[client_index].get_sockfd());
+                return ;
+            }
+        }
         this->_channel[channel_index].add_client_to_list(this->_client[client_index].get_nick_name());
+    }
     else
     {
         //set channelname to first param of message
@@ -202,11 +223,11 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
     // write a list of all clients in channel to new joined client
     std::string client_list_message =   ":server 353 "
                                         + this->_client[client_index].get_nick_name()
-                                        + " "
+                                        + " = "
                                         + tokenized_message.params[0]
                                         + " :";
 
-    std::vector<std::string> client_list = this->_channel[channel_index].get_client_list();
+    client_list = this->_channel[channel_index].get_client_list();
     for (unsigned int i = 0; i < client_list.size(); i++)
         client_list_message += client_list[i] + " ";
     client_list_message += "\n";
@@ -331,6 +352,7 @@ void Server::handle_data(int client_index)
 		if (!line.empty())
 		{
 			tokenized_message = this->parse_message_line(line);
+            std::cout << this->_client[client_index].get_nick_name() << ": " << line << std::endl;
 			this->execute_command(tokenized_message, client_index);
 		}
 	}
