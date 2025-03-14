@@ -28,7 +28,7 @@ void Channel::remove_client_from_list(std::string client_name)
     }
 }
 
-std::vector<std::string> Channel::get_client_list()
+const std::vector<std::string>& Channel::get_client_list() const
 {
-    return (this->_client);
+    return this->_client;
 }

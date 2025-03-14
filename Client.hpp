@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <sys/socket.h>
@@ -37,5 +38,3 @@ class Client
         void                set_user_name(std::string new_username);
         std::string         get_user_name();
 };
-
-

@@ -1,12 +1,39 @@
 
 #include "Server.hpp"
 
+Server::Server()
+{
+    _client.reserve(100);
+}
+
+Server::~Server()
+{
+    std::cout << "Shutting down server..." << std::endl;
+
+    for (auto &client : this->_client)
+    {
+        close(client.get_sockfd());
+    }
+    this->_client.clear();
+    this->_poll_fd.clear();
+    this->_channel.clear();
+    close(this->_sockfd);
+}
+
+
 Server::msg_tokens Server::error_message(std::string error_code, std::string message)
 {
     msg_tokens error_message;
     error_message.command = error_code;
     error_message.params.push_back(message);
     return (error_message);
+}
+
+void Server::send_error_message(int client_index, std::string error_code, std::string message)
+{
+    msg_tokens error_msg = error_message(error_code, message);
+    std::string formatted_error = ":" + error_msg.command + " " + error_msg.params[0] + "\n";
+    putstr_fd(formatted_error, this->_client[client_index].get_sockfd());
 }
 
 int Server::get_sockfd()
@@ -90,19 +117,68 @@ void Server::accept_client()
     this->init_poll_struct(new_client.get_sockfd());
 }
 
+void Server::disconnect_client(int client_index)
+{
+    std::string nick = this->_client[client_index].get_nick_name();
+    std::cout << "Client " << nick << " disconnected." << std::endl;
+    
+    int client_fd = this->_client[client_index].get_sockfd();
+    close(client_fd);
+    for (size_t i = 1; i < _poll_fd.size(); ++i)
+    {
+        if (_poll_fd[i].fd == client_fd)
+        {
+            _poll_fd.erase(_poll_fd.begin() + i);
+            break;
+        }
+    }
+    _client.erase(_client.begin() + client_index);
+}
 
 //not a fatal error should not quit whole server
+// void Server::receive_data(int client_index)
+// {
+//     char    buffer[1028];
+//     int     n = read(this->_client[client_index].get_sockfd(), buffer, sizeof(buffer) - 1);
+
+//     if (n < 0)
+//         throw std::invalid_argument ("ERROR reading from socket");
+//     this->_client[client_index].set_last_message(buffer);
+// } // debug
+
 void Server::receive_data(int client_index)
 {
-    char    buffer[1028];
-    int     n = 0;
+	if (client_index >= static_cast<int>(_client.size()))
+		return;
 
-    memset(&buffer, 0, sizeof(buffer));
-    n = read(this->_client[client_index].get_sockfd(), buffer, 1028);
+    char buffer[1028];
+    int client_fd = _client[client_index].get_sockfd();
+    int n = read(client_fd, buffer, sizeof(buffer) - 1);
+
     if (n < 0)
-        throw std::invalid_argument ("ERROR reading from socket");
-    this->_client[client_index].set_last_message(buffer);
+    {
+        if (errno == EWOULDBLOCK || errno == EAGAIN)
+            return;
+
+        std::cerr << "ERROR reading from socket (Client: " 
+                  << _client[client_index].get_nick_name() 
+                  << "): " << strerror(errno) << std::endl;
+
+        send_error_message(client_index, "ERROR", strerror(errno));
+        disconnect_client(client_index);
+        return;
+    }
+    if (n == 0)
+    {
+        disconnect_client(client_index);
+        return;
+    }
+
+    buffer[n] = '\0';
+    _client[client_index].set_last_message(buffer);
 }
+
+
 
 Server::msg_tokens Server::parse_message_line(std::string line)
 {
@@ -424,6 +500,34 @@ void Server::commands_part(struct msg_tokens tokenized_message, int client_index
     putstr_fd(not_in_channel_message, this->_client[client_index].get_sockfd());
 }
 
+void Server::commands_quit(struct msg_tokens tokenized_message, int client_index)
+{
+    std::string nick = this->_client[client_index].get_nick_name();
+    std::string quit_message = "Client Disconnected";
+
+    if (!tokenized_message.trailing.empty())  
+        quit_message = tokenized_message.trailing;
+
+    std::string quit_msg = ":" + nick + " QUIT :" + quit_message + "\n";
+    for (auto &channel : this->_channel)
+    {
+        if (std::find(channel.get_client_list().begin(), channel.get_client_list().end(), nick) != channel.get_client_list().end())
+        {
+            for (const std::string &client_name : channel.get_client_list())
+            {
+                int target_index = get_client_index_through_name(client_name);
+                if (target_index != -1 && target_index != client_index)
+                    putstr_fd(quit_msg, this->_client[target_index].get_sockfd());
+            }
+
+            channel.remove_client_from_list(nick);
+        }
+    }
+    putstr_fd(quit_msg, this->_client[client_index].get_sockfd());
+    disconnect_client(client_index);
+}
+
+
 void Server::execute_command(struct msg_tokens tokenized_message, int client_index)
 {
     if (std::isdigit(tokenized_message.command[0]))
@@ -463,6 +567,10 @@ void Server::execute_command(struct msg_tokens tokenized_message, int client_ind
 			putstr_fd(tokenized_message.params[0], this->_client[client_index].get_sockfd());
 		putstr_fd("\n", this->_client[client_index].get_sockfd());
     }
+	else if (tokenized_message.command == "QUIT")
+	{
+		this->commands_quit(tokenized_message, client_index);
+	}
     else
         execute_command(error_message("421", "Unknown command"), client_index);
 }
@@ -500,27 +608,36 @@ void Server::handle_data(int client_index)
 
 void Server::loop()
 {
-    while (this->running == true)
-    {
-        if (poll(&this->_poll_fd[0], this->_poll_fd.size(), -1) == -1)
-            throw std::invalid_argument ("ERROR during poll");
-        for (size_t i = 0; i < this->_poll_fd.size(); i++)
-        {
-            if (this->_poll_fd[i].revents & POLLIN && this->running == true)
-            {
-                if (i == 0)
-                {
-                    this->accept_client();
-                }
-                else
-                {
-                    this->receive_data(i - 1);
-                    this->handle_data(i - 1);
-                }
-            }
-        }
-    }
+	while (this->running)
+	{
+		if (poll(&_poll_fd[0], _poll_fd.size(), -1) == -1)
+			throw std::invalid_argument("ERROR during poll");
+		for (int i = _poll_fd.size() - 1; i >= 0; --i)
+		{
+			if (_poll_fd[i].revents & POLLIN)
+			{
+				if (i == 0)
+					accept_client();
+				else
+				{
+					int client_index = i - 1;
+					receive_data(client_index);
+					if (client_index < static_cast<int>(_client.size()))
+						handle_data(client_index);
+				}
+			}
+		}
+		for (auto it = _client.begin(); it != _client.end();)
+		{
+			if (it->get_sockfd() == -1)
+				it = _client.erase(it);
+			else
+				++it;
+		}
+	}
 }
+
+
 
 void Server::end()
 {

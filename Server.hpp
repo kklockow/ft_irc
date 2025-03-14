@@ -53,8 +53,13 @@ class Server
         int                             get_client_index_through_name(std::string client_name);
         int                             get_channel_index_through_name(std::string channel_name);
 		msg_tokens                      error_message(std::string error_code, std::string message);
+		void							send_error_message(int client_index, std::string error_code, std::string message);
+		void							disconnect_client(int client_index);
+		void                            commands_quit(struct msg_tokens tokenized_message, int client_index);
 
     public:
+		Server();
+		~Server();
         int                             get_sockfd();
         int                             get_port();
         struct sockaddr_in              get_server_address();
