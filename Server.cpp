@@ -157,11 +157,13 @@ void Server::commands_join_message_clients(std::string channel_name)
     int                         current_client_index = 0;
 
     channel_index = this->get_channel_index_through_name(channel_name);
+    std::cout << channel_index << channel_name << std::endl;
     client_list = this->_channel[channel_index].get_client_list();
     for (unsigned int i = 0; i < client_list.size(); i++)
     {
         current_client_index = get_client_index_through_name(client_list[i]);
-
+        std::cout << "NAME :" << client_list[i] << std::endl;
+        std::cout << current_client_index << " i:" << i << std::endl;
         std::string message_to_clients =    ":"
                                             + this->_client[current_client_index].get_nick_name()
                                             + "!"
@@ -187,6 +189,7 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
     }
 
     channel_index = this->get_channel_index_through_name(tokenized_message.params[0]);
+    //if channel doesnt exist
     if (channel_index != -1)
     {
         client_list = this->_channel[channel_index].get_client_list();
@@ -200,7 +203,9 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
                 return ;
             }
         }
+        std::cout << "name start: " << this->_client[client_index].get_nick_name() << std::endl << "indexmindex" << channel_index << std::endl << "channel name" << this->_channel[channel_index].get_name() << std::endl;
         this->_channel[channel_index].add_client_to_list(this->_client[client_index].get_nick_name());
+        std::cout << "HI" << std::endl;
     }
     else
     {
@@ -251,6 +256,7 @@ void Server::commands_nick(struct msg_tokens tokenized_message, int client_index
 {
     int current_client_fd;
 
+    // search for nickname in client vector
     for (unsigned int i = 0; i < this->_client.size(); i++)
     {
         if (tokenized_message.params[0] == this->_client[i].get_nick_name())
@@ -263,6 +269,7 @@ void Server::commands_nick(struct msg_tokens tokenized_message, int client_index
             return ;
         }
     }
+    // broadcast that nick was changed
     for (unsigned int i = 0; i < this->_client.size(); i++)
     {
         current_client_fd = this->_client[i].get_sockfd();
@@ -280,8 +287,7 @@ void Server::commands_nick(struct msg_tokens tokenized_message, int client_index
 
 void Server::commands_user(struct msg_tokens tokenized_message, int client_index)
 {
-    //check for already taken username still missing
-
+    //check for already taken username
     for (unsigned int i = 0; i < this->_client.size(); i++)
     {
         if (tokenized_message.params[0] == this->_client[i].get_user_name())
@@ -388,6 +394,7 @@ void Server::commands_part(struct msg_tokens tokenized_message, int client_index
 
     int channel_index = this->get_channel_index_through_name(tokenized_message.params[0]);
 
+    // channel doesnt exist
     if (channel_index == -1)
     {
         std::string nonexist_message = "403 " + tokenized_message.params[0] + " :No such channel\n";
@@ -400,6 +407,7 @@ void Server::commands_part(struct msg_tokens tokenized_message, int client_index
     {
         if (this->_client[client_index].get_nick_name() == client_list[i])
         {
+            // boradcast user leaving channel
             for (unsigned int i = 0; i < client_list.size(); i++)
             {
                 int current_client_index = this->get_client_index_through_name(client_list[i]);
@@ -416,10 +424,9 @@ void Server::commands_part(struct msg_tokens tokenized_message, int client_index
             return ;
         }
     }
+    // user not on channel
     std::string not_in_channel_message = "442 " + tokenized_message.params[0] + " :You're not on that channel\n";
     putstr_fd(not_in_channel_message, this->_client[client_index].get_sockfd());
-    // :Alice!alice@hostname PART #chatroom
-
 }
 
 void Server::execute_command(struct msg_tokens tokenized_message, int client_index)

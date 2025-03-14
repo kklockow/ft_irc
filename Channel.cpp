@@ -18,10 +18,13 @@ void Channel::add_client_to_list(std::string client_name)
 
 void Channel::remove_client_from_list(std::string client_name)
 {
-    for (auto &it : this->_client)
+    for (unsigned int i = 0; i < this->_client.size(); i++)
     {
-        if (it == client_name)
-            it.erase();
+        if (this->_client[i] == client_name)
+        {
+            this->_client.erase(this->_client.begin() + i);
+            break ;
+        }
     }
 }
 

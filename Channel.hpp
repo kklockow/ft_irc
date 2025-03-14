@@ -10,7 +10,7 @@ class Channel
     private:
         std::string                 _name;
         std::vector<std::string>    _client;
-        
+
 
     public:
         void                        set_name(std::string new_name);
