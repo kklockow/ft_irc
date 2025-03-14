@@ -4,3 +4,4 @@ main.o
 Server.o
 Channel.o
 Client.o
+todo.txt

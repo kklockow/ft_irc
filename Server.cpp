@@ -378,6 +378,49 @@ void Server::commands_message(struct msg_tokens tokenized_message, int client_in
     }
 }
 
+void Server::commands_part(struct msg_tokens tokenized_message, int client_index)
+{
+    if (tokenized_message.params.empty() || tokenized_message.params[0].empty())
+    {
+        putstr_fd(":server 461 PART :Not enough parameters\n", this->_client[client_index].get_sockfd());
+        return ;
+    }
+
+    int channel_index = this->get_channel_index_through_name(tokenized_message.params[0]);
+
+    if (channel_index == -1)
+    {
+        std::string nonexist_message = "403 " + tokenized_message.params[0] + " :No such channel\n";
+        putstr_fd(nonexist_message, this->_client[client_index].get_sockfd());
+        return ;
+    }
+
+    std::vector<std::string> client_list = this->_channel[channel_index].get_client_list();
+    for (unsigned int i = 0; i < client_list.size(); i++)
+    {
+        if (this->_client[client_index].get_nick_name() == client_list[i])
+        {
+            for (unsigned int i = 0; i < client_list.size(); i++)
+            {
+                int current_client_index = this->get_client_index_through_name(client_list[i]);
+                std::string message =   ":"
+                                        + this->_client[current_client_index].get_nick_name()
+                                        + "!"
+                                        + this->_client[current_client_index].get_user_name()
+                                        + "@localhost PART "
+                                        + tokenized_message.params[0]
+                                        + "\n";
+                putstr_fd(message, this->_client[current_client_index].get_sockfd());
+            }
+            this->_channel[channel_index].remove_client_from_list(this->_client[client_index].get_nick_name());
+            return ;
+        }
+    }
+    std::string not_in_channel_message = "442 " + tokenized_message.params[0] + " :You're not on that channel\n";
+    putstr_fd(not_in_channel_message, this->_client[client_index].get_sockfd());
+    // :Alice!alice@hostname PART #chatroom
+
+}
 
 void Server::execute_command(struct msg_tokens tokenized_message, int client_index)
 {
@@ -407,6 +450,8 @@ void Server::execute_command(struct msg_tokens tokenized_message, int client_ind
         this->commands_user(tokenized_message, client_index);
     else if (tokenized_message.command == "PRIVMSG")
         this->commands_message(tokenized_message, client_index);
+    else if (tokenized_message.command == "PART")
+        this->commands_part(tokenized_message, client_index);
     else if (tokenized_message.command == "PING")
     {
         putstr_fd(":server PONG ", this->_client[client_index].get_sockfd());
