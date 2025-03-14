@@ -66,4 +66,5 @@ class Server
         void                            init(char **av);
         void                            loop();
         void                            end();
+		typedef struct msg_tokens		MsgTokens;
 };
