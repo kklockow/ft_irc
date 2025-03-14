@@ -1,7 +1,11 @@
-.vscode
+.vscode/
+.gitignore
 ircserv
 main.o
 Server.o
 Channel.o
 Client.o
 todo.txt
+*.o
+a.out
+*.a
