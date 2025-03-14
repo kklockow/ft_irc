@@ -157,13 +157,10 @@ void Server::commands_join_message_clients(std::string channel_name)
     int                         current_client_index = 0;
 
     channel_index = this->get_channel_index_through_name(channel_name);
-    std::cout << channel_index << channel_name << std::endl;
     client_list = this->_channel[channel_index].get_client_list();
     for (unsigned int i = 0; i < client_list.size(); i++)
     {
         current_client_index = get_client_index_through_name(client_list[i]);
-        std::cout << "NAME :" << client_list[i] << std::endl;
-        std::cout << current_client_index << " i:" << i << std::endl;
         std::string message_to_clients =    ":"
                                             + this->_client[current_client_index].get_nick_name()
                                             + "!"
@@ -203,9 +200,7 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
                 return ;
             }
         }
-        std::cout << "name start: " << this->_client[client_index].get_nick_name() << std::endl << "indexmindex" << channel_index << std::endl << "channel name" << this->_channel[channel_index].get_name() << std::endl;
         this->_channel[channel_index].add_client_to_list(this->_client[client_index].get_nick_name());
-        std::cout << "HI" << std::endl;
     }
     else
     {
