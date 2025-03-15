@@ -1,5 +1,7 @@
 
 #include "Server.hpp"
+#include "Channel.hpp"
+#include "OP_cmds.hpp"
 
 Server::Server()
 {
@@ -283,6 +285,8 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
         new_channel.set_name(tokenized_message.params[0]);
         //add client to client list of new channel
         new_channel.add_client_to_list(this->_client[client_index].get_nick_name());
+		//add first client to operators list of new channel
+		new_channel.add_operator_to_channel(this->_client[client_index].get_nick_name());
         //add channel to channel vector
         this->_channel.emplace_back(new_channel);
         channel_index = this->_channel.size() - 1;
@@ -569,6 +573,12 @@ void Server::execute_command(struct msg_tokens tokenized_message, int client_ind
 	else if (tokenized_message.command == "QUIT")
 	{
 		this->commands_quit(tokenized_message, client_index);
+	}
+	else if (tokenized_message.command == "KICK" || tokenized_message.command == "INVITE" ||
+				tokenized_message.command == "TOPIC" || tokenized_message.command == "MODE")
+	{
+		int channel_index = this->get_channel_index_through_name(this->_client[client_index].get_nick_name());
+		OP_commands::execute_operator_cmd(tokenized_message, this->_client[client_index].get_nick_name(), this->_channel[channel_index]);
 	}
     else
         execute_command(error_message("421", "Unknown command"), client_index);
