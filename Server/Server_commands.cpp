@@ -247,9 +247,9 @@ void Server::commands_message(struct msg_tokens tokenized_message, int client_in
             if (current_client_index != client_index)
             {
                 std::string message =   ":"
-                                        + this->_client[current_client_index].get_nick_name()
+                                        + this->_client[client_index].get_nick_name()
                                         + "!"
-                                        + this->_client[current_client_index].get_user_name()
+                                        + this->_client[client_index].get_user_name()
                                         + "@localhost PRIVMSG "
                                         + tokenized_message.params[0]
                                         + " :"
@@ -274,9 +274,9 @@ void Server::commands_message(struct msg_tokens tokenized_message, int client_in
         }
 
         std::string message =   ":"
-                                + this->_client[receiver_client_index].get_nick_name()
+                                + this->_client[client_index].get_nick_name()
                                 + "!"
-                                + this->_client[receiver_client_index].get_user_name()
+                                + this->_client[client_index].get_user_name()
                                 + "@localhost PRIVMSG "
                                 + tokenized_message.params[0]
                                 + " :"
