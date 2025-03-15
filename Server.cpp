@@ -20,7 +20,6 @@ Server::~Server()
     close(this->_sockfd);
 }
 
-
 Server::msg_tokens Server::error_message(std::string error_code, std::string message)
 {
     msg_tokens error_message;
@@ -663,18 +662,26 @@ bool Server::authenticateClient(const msg_tokens &tokenized_message, int client_
 		password = tokenized_message.trailing;
 	//std::cout << "Print password:" << password << std::endl;
 	//std::cout << "Print server password:" << this->_password << std::endl;
-	if (password != this->_password)
+	if (password != this->_password) 
 	{
-		putstr_fd("ERROR: Password incorrect\n", this->_client[client_index].get_sockfd());
-		close(this->_client[client_index].get_sockfd());
-		this->_client.erase(this->_client.begin() + client_index);
-		this->_poll_fd.erase(this->_poll_fd.begin() + client_index + 1);
+		this->_client[client_index].increase_failed_auth_attempts();
+		if (this->_client[client_index].get_failed_auth_attempts() >= 3) 
+		{
+			std::string error_msg = ":server 464 " + this->_client[client_index].get_nick_name() +
+									" :Too many failed authentication attempts. Disconnecting...\n";
+			putstr_fd(error_msg, this->_client[client_index].get_sockfd());
+			std::string quit_msg = ":" + this->_client[client_index].get_nick_name() +
+								" QUIT :Excessive failed authentication\n";
+			putstr_fd(quit_msg, this->_client[client_index].get_sockfd());
+			disconnect_client(client_index);
+			return (false);
+		}
+		std::string passwd_mismatch_msg = ":server 464 " + this->_client[client_index].get_nick_name() +
+										" :Incorrect password. Try again.\n";
+		putstr_fd(passwd_mismatch_msg, this->_client[client_index].get_sockfd());
 		return (false);
 	}
-	else
-	{
-		std::cout << "set authenticated(true)" << std::endl;
-		this->_client[client_index].set_authenticated(true);
-		return (true);
-	}
+	this->_client[client_index].reset_failed_auth_attempts();
+	this->_client[client_index].set_authenticated(true);
+	return (true);
 }

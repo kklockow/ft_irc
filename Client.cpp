@@ -1,6 +1,8 @@
 
 #include "Client.hpp"
 
+Client::Client() : _failed_auth_attempts(0) {}
+
 void Client::set_sockfd(int new_sockfd)
 {
     this->_sockfd = new_sockfd;
@@ -71,4 +73,19 @@ void Client::set_user_name(std::string new_username)
 std::string Client::get_user_name()
 {
 	return (this->_user_name);
+}
+
+void Client::increase_failed_auth_attempts()
+{
+	_failed_auth_attempts++;
+}
+
+void  Client::reset_failed_auth_attempts()
+{
+	_failed_auth_attempts = 0;
+}
+
+int  Client::get_failed_auth_attempts() const 
+{
+	return (_failed_auth_attempts);
 }

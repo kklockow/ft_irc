@@ -20,9 +20,11 @@ class Client
         std::string         _last_message;
         std::string         _user_name;
 		bool				_authenticated;
-
+		int					_failed_auth_attempts;
 
     public:
+		Client();
+
         void                set_sockfd(int new_sockfd);
         int                 get_sockfd();
         void                set_address(struct sockaddr_in new_sockaddr_in);
@@ -37,4 +39,7 @@ class Client
 		bool				get_authenticated();
         void                set_user_name(std::string new_username);
         std::string         get_user_name();
+		void                increase_failed_auth_attempts();
+		void                reset_failed_auth_attempts();
+		int                 get_failed_auth_attempts() const;
 };
