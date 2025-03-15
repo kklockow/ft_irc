@@ -91,7 +91,7 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
     }
 
     channel_index = this->get_channel_index_through_name(tokenized_message.params[0]);
-    //if channel doesnt exist
+    //if channel does exist
     if (channel_index != -1)
     {
         client_list = this->_channel[channel_index].get_client_list();
