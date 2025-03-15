@@ -179,8 +179,6 @@ void Server::receive_data(int client_index)
     _client[client_index].set_last_message(buffer);
 }
 
-
-
 Server::msg_tokens Server::parse_message_line(std::string line)
 {
     std::stringstream           line_stream(line);
@@ -645,8 +643,6 @@ void Server::loop()
 		}
 	}
 }
-
-
 
 void Server::end()
 {
