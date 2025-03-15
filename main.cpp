@@ -1,6 +1,6 @@
 
 #include <iostream>
-#include "Server.hpp"
+#include "Server/Server.hpp"
 
 void    check_input(int ac, char **av);
 

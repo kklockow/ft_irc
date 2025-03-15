@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Channel.hpp"
-#include "Server.hpp"
+#include "Channel/Channel.hpp"
+#include "Server/Server.hpp"
 
 class OP_commands
 {
