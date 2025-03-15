@@ -13,14 +13,10 @@ void Server::execute_command(struct msg_tokens tokenized_message, int client_ind
         putstr_fd(" :", this->_client[client_index].get_sockfd());
         putstr_fd(tokenized_message.params[0], this->_client[client_index].get_sockfd());
         putstr_fd("\n", this->_client[client_index].get_sockfd());
-        return ;
     }
-    if (!this->_client[client_index].get_authenticated() && tokenized_message.command != "PASS")
-    {
+    else if (!this->_client[client_index].get_authenticated() && tokenized_message.command != "PASS")
         execute_command(error_message("464", "Password required"), client_index);
-        return ;
-    }
-    if (tokenized_message.command == "PASS")
+    else if (tokenized_message.command == "PASS")
         authenticateClient(tokenized_message, client_index);
     else if (tokenized_message.command == "JOIN")
         this->commands_join(tokenized_message, client_index);
@@ -53,6 +49,7 @@ void Server::execute_command(struct msg_tokens tokenized_message, int client_ind
 	}
     else
         execute_command(error_message("421", "Unknown command"), client_index);
+    this->_client[client_index].set_last_message((char *)"");
 }
 
 void Server::commands_join_message_clients(std::string channel_name)
@@ -238,6 +235,7 @@ void Server::commands_message(struct msg_tokens tokenized_message, int client_in
                                             + tokenized_message.params[0]
                                             + ":No such channel\n";
             putstr_fd(server_message, this->_client[client_index].get_sockfd());
+            return ;
         }
 
         std::vector<std::string> client_list =  this->_channel[channel_index].get_client_list();
@@ -271,6 +269,7 @@ void Server::commands_message(struct msg_tokens tokenized_message, int client_in
                                             + tokenized_message.params[0]
                                             + ":No such nick\n";
             putstr_fd(server_message, this->_client[client_index].get_sockfd());
+            return ;
         }
 
         std::string message =   ":"

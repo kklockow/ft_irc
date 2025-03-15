@@ -50,6 +50,13 @@ void Client::set_last_message(char *message)
     this->_last_message = temp_message;
 }
 
+void Client::append_last_message(char *message)
+{
+    std::string temp_message(message);
+
+    this->_last_message += temp_message;
+}
+
 std::string Client::get_last_message()
 {
     return (this->_last_message);
@@ -85,7 +92,7 @@ void  Client::reset_failed_auth_attempts()
 	_failed_auth_attempts = 0;
 }
 
-int  Client::get_failed_auth_attempts() const 
+int  Client::get_failed_auth_attempts() const
 {
 	return (_failed_auth_attempts);
 }

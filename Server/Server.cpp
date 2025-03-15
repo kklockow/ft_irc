@@ -161,7 +161,7 @@ void Server::receive_data(int client_index)
     }
 
     buffer[n] = '\0';
-    _client[client_index].set_last_message(buffer);
+    _client[client_index].append_last_message(buffer);
 }
 
 Server::msg_tokens Server::parse_message_line(std::string line)
@@ -235,7 +235,7 @@ void Server::loop()
 				{
 					int client_index = i - 1;
 					receive_data(client_index);
-					if (client_index < static_cast<int>(_client.size()))
+					if (client_index < static_cast<int>(_client.size()) && this->_client[client_index].get_last_message().back() == '\n')
 						handle_data(client_index);
 				}
 			}
