@@ -5,6 +5,8 @@
 void OP_commands::execute_operator_cmd(Server::MsgTokens tokenized_message, const std::string client_nickname, Channel &channel)
 {
 	(void)client_nickname;
+	if (channel.get_name().empty()) // if channel name is empty
+		return ;
 	std::vector<std::string> opList = channel.get_operator_list();
 	if (std::find(opList.begin(), opList.end(), client_nickname) == opList.end())
 		return;

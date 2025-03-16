@@ -11,8 +11,12 @@ int main(int ac, char **av)
     try
     {
         check_input(ac, av);
-        server.init(av);
-        server.loop();
+		if (!server.init(av))
+		{
+			std::cerr << "[ERROR] Server initialization failed. Exiting..." << std::endl;
+			return EXIT_FAILURE;
+		}
+		server.loop();
     }
     catch(const std::exception& e)
     {
@@ -25,15 +29,15 @@ int main(int ac, char **av)
 void check_input(int ac, char **av)
 {
 	if (ac != 3)
-		throw std::invalid_argument("ERROR, provide a port and a password");
+		throw std::invalid_argument("[ERROR] provide a port and a password");
 
 	std::string port_str = av[1];
 	if (port_str.find_first_not_of("0123456789") != std::string::npos)
-		throw std::invalid_argument("ERROR, port must contain only numbers");
+		throw std::invalid_argument("[ERROR] port must contain only numbers");
 	int port = std::stoi(port_str);
 	// Check the port number range < 1024 are used in the system
 	if (port < 1024 || port > 65535)
-		throw std::invalid_argument("ERROR, port must be between 1024 and 65535");
+		throw std::invalid_argument("[ERROR] port must be between 1024 and 65535");
 }
 
 

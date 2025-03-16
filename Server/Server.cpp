@@ -32,19 +32,25 @@ Server::msg_tokens Server::error_message(std::string error_code, std::string mes
 
 void Server::send_error_message(int client_index, std::string error_code, std::string message)
 {
+	if (!valid_client_index(client_index) || _client[client_index].get_sockfd() == -1)
+		return;
     msg_tokens error_msg = error_message(error_code, message);
     std::string formatted_error = ":" + error_msg.command + " " + error_msg.params[0] + "\n";
     putstr_fd(formatted_error, this->_client[client_index].get_sockfd());
 }
 
-void Server::create_socket()
+bool Server::create_socket()
 {
     this->_sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (this->_sockfd < 0)
-        throw std::invalid_argument ("ERROR opening socket");
+	{
+		std::cerr << "[ERROR] Failed to create socket: " << strerror(errno) << std::endl;
+		return (false); // Instead of throwing an exception, return false
+	}
+	return (true);
 }
 
-void Server::fill_socket_struct()
+bool Server::fill_socket_struct()
 {
     int enabled = 1;
 
@@ -52,16 +58,28 @@ void Server::fill_socket_struct()
     this->_server_address.sin_family = AF_INET;
     this->_server_address.sin_addr.s_addr = INADDR_ANY;
     this->_server_address.sin_port = htons(this->_port);
-    if (setsockopt(this->_sockfd, SOL_SOCKET, SO_REUSEADDR, &enabled, sizeof(enabled)) < 0)
-        throw std::invalid_argument ("ERROR on setsockopt");
-    if (fcntl(this->_sockfd, F_SETFL, O_NONBLOCK) < 0)
-        throw std::invalid_argument ("ERROR on fcntl");
+	if (setsockopt(this->_sockfd, SOL_SOCKET, SO_REUSEADDR, &enabled, sizeof(enabled)) < 0)
+	{
+		std::cerr << "[ERROR] setsockopt failed: " << strerror(errno) << std::endl;
+		close(this->_sockfd);
+		return (false);
+	}
+	if (fcntl(this->_sockfd, F_SETFL, O_NONBLOCK) < 0)
+	{
+		std::cerr << "[ERROR] fcntl failed: " << strerror(errno) << std::endl;
+		return (false);
+	}
+	return (true);
 }
 
-void Server::bind_server_address()
+bool Server::bind_server_address()
 {
     if (bind(this->_sockfd, (struct sockaddr *) &this->_server_address, sizeof(this->_server_address)) < 0)
-        throw std::invalid_argument ("ERROR on binding");
+    {
+        std::cerr << "[ERROR] Failed to bind socket: " << strerror(errno) << std::endl;
+        return (false);
+    }
+    return (true);
 }
 
 void Server::init_poll_struct(int fd)
@@ -75,50 +93,66 @@ void Server::init_poll_struct(int fd)
     this->_poll_fd.emplace_back(new_poll);
 }
 
-void Server::init(char **av)
+bool Server::init(char **av)
 {
-    this->create_socket();
-    this->_port = std::atoi(av[1]);
+	this->_port = std::atoi(av[1]);
 	this->_password = av[2];
-    this->fill_socket_struct();
-    this->bind_server_address();
-    listen(this->_sockfd, 5);
-    this->init_poll_struct(this->_sockfd);
-    this->running = true;
+	if (this->_port < 1024 || this->_port > 65535)
+	{
+		std::cerr << "[ERROR] Invalid port number: " << this->_port << ". Port must be between 1024 and 65535.\n";
+		return (false);
+	}
+	if (!this->create_socket() || !this->fill_socket_struct() || !this->bind_server_address())
+	{
+		close(this->_sockfd);
+		return (false);
+	}
+	if (listen(this->_sockfd, 5) < 0)
+	{
+		std::cerr << "[ERROR] Failed to listen on socket: " << strerror(errno) << std::endl;
+		close(this->_sockfd);
+		return (false);
+	}
+	this->init_poll_struct(this->_sockfd);
+	this->running = true;
+	std::cout << "[INFO] Server initialized successfully on port " << this->_port << std::endl;
+	return (true);
 }
 
 void Server::accept_client()
 {
-    Client               new_client;
     struct sockaddr_in   temp_client_address;
     socklen_t            temp_client_len;
 
-    new_client.set_nick_name((char *)"none");
-    new_client.set_len(sizeof(new_client.get_address()));
-    temp_client_len = new_client.get_len();
-    new_client.set_sockfd(accept(this->_sockfd, (struct sockaddr *)&temp_client_address, &temp_client_len));
-    if (new_client.get_sockfd() < 0)
-        throw std::invalid_argument ("ERROR on accept");
+	int new_sockfd = accept(this->_sockfd, (struct sockaddr *)&temp_client_address, &temp_client_len);
+	if (new_sockfd < 0)
+	{
+		std::cerr << "[ERROR] Failed to accept client: " << strerror(errno) << std::endl;
+		return ;
+	}
+	Client               new_client;
+	new_client.set_sockfd(new_sockfd);
+	new_client.set_address(temp_client_address);
+	new_client.set_len(temp_client_len);
+	new_client.set_nick_name("none");
+	std::cout << "[INFO] New client connected (fd: " << new_sockfd << ")" << std::endl;
     this->_client.emplace_back(new_client);
     this->init_poll_struct(new_client.get_sockfd());
 }
 
 void Server::disconnect_client(int client_index)
 {
+	if (!valid_client_index(client_index) || _client[client_index].get_sockfd() == -1)
+		return;
     std::string nick = this->_client[client_index].get_nick_name();
     std::cout << "Client " << nick << " disconnected." << std::endl;
 
     int client_fd = this->_client[client_index].get_sockfd();
     close(client_fd);
-    for (size_t i = 1; i < _poll_fd.size(); ++i)
-    {
-        if (_poll_fd[i].fd == client_fd)
-        {
-            _poll_fd.erase(_poll_fd.begin() + i);
-            break;
-        }
-    }
-    _client.erase(_client.begin() + client_index);
+	_poll_fd.erase(std::remove_if(_poll_fd.begin(), _poll_fd.end(),
+								[client_fd](const struct pollfd &p) { return p.fd == client_fd; }),
+				_poll_fd.end());
+	_client.erase(_client.begin() + client_index);
 }
 
 //not a fatal error should not quit whole server
@@ -134,8 +168,10 @@ void Server::disconnect_client(int client_index)
 
 void Server::receive_data(int client_index)
 {
-	if (client_index >= static_cast<int>(_client.size()))
+	if (!valid_client_index(client_index) || _client[client_index].get_sockfd() == -1)
 		return;
+	if (client_index >= static_cast<int>(_client.size()))
+		return ;
 
     char buffer[1028];
     int client_fd = _client[client_index].get_sockfd();
@@ -144,7 +180,7 @@ void Server::receive_data(int client_index)
     if (n < 0)
     {
         if (errno == EWOULDBLOCK || errno == EAGAIN)
-            return;
+            return ;
 
         std::cerr << "ERROR reading from socket (Client: "
                   << _client[client_index].get_nick_name()
@@ -152,12 +188,12 @@ void Server::receive_data(int client_index)
 
         send_error_message(client_index, "ERROR", strerror(errno));
         disconnect_client(client_index);
-        return;
+        return ;
     }
     if (n == 0)
     {
         disconnect_client(client_index);
-        return;
+        return ;
     }
 
     buffer[n] = '\0';
@@ -267,6 +303,8 @@ void Server::end()
 
 bool Server::authenticateClient(const msg_tokens &tokenized_message, int client_index)
 {
+	if (!valid_client_index(client_index) || _client[client_index].get_sockfd() == -1)
+		return (false);
 	std::string password;
 	if (!tokenized_message.params.empty())
 		password = tokenized_message.params[0];

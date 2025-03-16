@@ -14,6 +14,7 @@
 #include <vector>
 #include <fcntl.h>
 #include <sstream>
+#include <algorithm>
 
 class Server
 {
@@ -34,9 +35,9 @@ class Server
         std::vector<struct pollfd>      _poll_fd;
         std::vector<Channel>            _channel;
 		std::string						_password;
-        void                            create_socket();
-        void                            fill_socket_struct();
-        void                            bind_server_address();
+        bool                            create_socket();
+        bool                            fill_socket_struct();
+        bool                            bind_server_address();
         void                            init_poll_struct(int fd);
         void                            accept_client();
         void                            receive_data(int client_index);
@@ -61,10 +62,12 @@ class Server
     public:
 		Server();
 		~Server();
+		bool                            valid_channel_index(int index);
+		bool                            valid_client_index(int index);
         int                             get_sockfd();
         int                             get_port();
         struct sockaddr_in              get_server_address();
-        void                            init(char **av);
+        bool                            init(char **av);
         void                            loop();
         void                            end();
 		typedef struct msg_tokens		MsgTokens;

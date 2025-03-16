@@ -35,3 +35,23 @@ struct sockaddr_in Server::get_server_address()
 {
     return (this->_server_address);
 }
+
+bool Server::valid_channel_index(int index)
+{
+	if (index < 0 || index >= static_cast<int>(_channel.size()))
+	{
+		std::cerr << "[ERROR] Invalid channel index: " << index << std::endl;
+		return (false);
+	}
+	return (true);
+}
+
+bool Server::valid_client_index(int index)
+{
+	if (index < 0 || index >= static_cast<int>(_client.size()))
+	{
+		std::cerr << "[ERROR] Invalid client index: " << index << std::endl;
+		return (false);
+	}
+	return (true);
+}
