@@ -45,11 +45,12 @@ class Server
         void                            execute_command(struct msg_tokens tokenized_message, int client_index);
 		bool							authenticateClient(const msg_tokens &tokenized_message, int client_index);
         void                            commands_join(struct msg_tokens tokenized_message, int client_index);
-        void                            commands_join_message_clients(std::string channel_name);
+        void                            commands_join_message_clients(std::string channel_name, int client_index);
         void                            commands_user(struct msg_tokens tokenized_message, int client_index);
         void                            commands_nick(struct msg_tokens tokenized_message, int client_index);
         void                            commands_message(struct msg_tokens tokenized_message, int client_index);
         void                            commands_part(struct msg_tokens tokenized_message, int client_index);
+        void                            commands_ping(struct msg_tokens tokenized_message, int client_index);
         int                             get_client_index_through_name(std::string client_name);
         int                             get_channel_index_through_name(std::string channel_name);
 		msg_tokens                      error_message(std::string error_code, std::string message);
