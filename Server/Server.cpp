@@ -6,6 +6,7 @@
 Server::Server()
 {
     _client.reserve(100);
+	_channel.reserve(40);
 }
 
 Server::~Server()
@@ -127,6 +128,8 @@ void Server::accept_client()
 	int new_sockfd = accept(this->_sockfd, (struct sockaddr *)&temp_client_address, &temp_client_len);
 	if (new_sockfd < 0)
 	{
+		if (errno == EWOULDBLOCK || errno == EAGAIN)
+			return;
 		std::cerr << "[ERROR] Failed to accept client: " << strerror(errno) << std::endl;
 		return ;
 	}
@@ -149,10 +152,13 @@ void Server::disconnect_client(int client_index)
 
     int client_fd = this->_client[client_index].get_sockfd();
     close(client_fd);
-	_poll_fd.erase(std::remove_if(_poll_fd.begin(), _poll_fd.end(),
-								[client_fd](const struct pollfd &p) { return p.fd == client_fd; }),
-				_poll_fd.end());
-	_client.erase(_client.begin() + client_index);
+	_poll_fd.erase(
+        std::remove_if(_poll_fd.begin(), _poll_fd.end(),
+                       [client_fd](const struct pollfd &p)
+					   { return p.fd == client_fd; }),
+        _poll_fd.end());
+    for (auto &channel : _channel)
+        channel.remove_client_from_list(nick);
 }
 
 //not a fatal error should not quit whole server
@@ -259,9 +265,17 @@ void Server::loop()
 {
 	while (this->running)
 	{
+		if (_poll_fd.empty())
+		{
+			usleep(10000);
+            continue ;
+		}
 		if (poll(&_poll_fd[0], _poll_fd.size(), -1) == -1)
-			throw std::invalid_argument("ERROR during poll");
-		for (int i = _poll_fd.size() - 1; i >= 0; --i)
+		{
+			std::cerr << "[ERROR] Poll failure: " << strerror(errno) << std::endl;
+			continue ;
+		}
+		for (size_t i = _poll_fd.size(); i-- > 0;) 
 		{
 			if (_poll_fd[i].revents & POLLIN)
 			{
@@ -270,19 +284,16 @@ void Server::loop()
 				else
 				{
 					int client_index = i - 1;
-					receive_data(client_index);
-					if (client_index < static_cast<int>(_client.size()) && this->_client[client_index].get_last_message().back() == '\n')
-						handle_data(client_index);
+					if (client_index >= 0 && client_index < static_cast<int>(_client.size()))
+                    {
+						receive_data(client_index);
+						if (client_index < static_cast<int>(_client.size()) && this->_client[client_index].get_last_message().back() == '\n')
+							handle_data(client_index);
+					}
 				}
 			}
 		}
-		for (auto it = _client.begin(); it != _client.end();)
-		{
-			if (it->get_sockfd() == -1)
-				it = _client.erase(it);
-			else
-				++it;
-		}
+        cleanup_disconnected_clients();
 	}
 }
 

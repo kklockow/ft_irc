@@ -77,6 +77,7 @@ class Server
 		void							disconnect_client(int client_index);
 		void                            commands_quit(struct msg_tokens tokenized_message, int client_index);
 		void                            put_str_fd(msg_tokens tokenized_message, int client_index);
+		void                            cleanup_disconnected_clients();
 
     public:
 		Server();

@@ -26,7 +26,7 @@ class Client
 		Client();
 
         void                set_sockfd(int new_sockfd);
-        int                 get_sockfd();
+        int                 get_sockfd() const;
         void                set_address(struct sockaddr_in new_sockaddr_in);
         struct sockaddr_in  get_address();
         void                set_len(socklen_t new_client_len);

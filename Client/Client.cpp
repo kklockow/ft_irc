@@ -8,7 +8,7 @@ void Client::set_sockfd(int new_sockfd)
     this->_sockfd = new_sockfd;
 }
 
-int Client::get_sockfd()
+int Client::get_sockfd() const
 {
     return (this->_sockfd);
 }

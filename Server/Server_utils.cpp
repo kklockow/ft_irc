@@ -55,3 +55,13 @@ bool Server::valid_client_index(int index)
 	}
 	return (true);
 }
+
+/// @brief Removes disconnected clients from the client vector
+/// @details Iterates through the client vector and removes any clients that have a socket file descriptor of -1
+/// @note It uses a lambda function to remove the disconnected clients
+void Server::cleanup_disconnected_clients()
+{
+    _client.erase(std::remove_if(_client.begin(), _client.end(),
+                                 [](const Client &c) { return c.get_sockfd() == -1; }),
+                  _client.end());
+}
