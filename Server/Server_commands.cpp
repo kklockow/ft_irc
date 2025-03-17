@@ -2,49 +2,84 @@
 #include "Server.hpp"
 #include "../OP_cmds.hpp"
 
-void Server::execute_command(struct msg_tokens tokenized_message, int client_index)
+// void Server::execute_command(struct msg_tokens tokenized_message, int client_index)
+// {
+// 	if (!valid_client_index(client_index) || _client[client_index].get_sockfd() == -1)
+// 		return;
+//     if (std::isdigit(tokenized_message.command[0]))
+//     {
+//         putstr_fd(":server ", this->_client[client_index].get_sockfd());
+//         putstr_fd(tokenized_message.command, this->_client[client_index].get_sockfd());
+//         putstr_fd(" ", this->_client[client_index].get_sockfd());
+//         putstr_fd(this->_client[client_index].get_nick_name(), this->_client[client_index].get_sockfd());
+//         putstr_fd(" :", this->_client[client_index].get_sockfd());
+//         putstr_fd(tokenized_message.params[0], this->_client[client_index].get_sockfd());
+//         putstr_fd("\n", this->_client[client_index].get_sockfd());
+//     }
+//     else if (!this->_client[client_index].get_authenticated() && tokenized_message.command != "PASS")
+//         execute_command(error_message("464", "Password required"), client_index);
+//     else if (tokenized_message.command == "PASS")
+//         authenticateClient(tokenized_message, client_index);
+//     else if (tokenized_message.command == "JOIN")
+//         this->commands_join(tokenized_message, client_index);
+//     else if (tokenized_message.command == "NICK")
+//         this->commands_nick(tokenized_message, client_index);
+//     else if (tokenized_message.command == "USER")
+//         this->commands_user(tokenized_message, client_index);
+//     else if (tokenized_message.command == "PRIVMSG")
+//         this->commands_message(tokenized_message, client_index);
+//     else if (tokenized_message.command == "PART")
+//         this->commands_part(tokenized_message, client_index);
+//     else if (tokenized_message.command == "PING")
+//         this->commands_ping(tokenized_message, client_index);
+// 	else if (tokenized_message.command == "QUIT")
+// 		this->commands_quit(tokenized_message, client_index);
+// 	else if (tokenized_message.command == "KICK" || tokenized_message.command == "INVITE" ||
+// 				tokenized_message.command == "TOPIC" || tokenized_message.command == "MODE")
+// 	{
+// 		int channel_index = this->get_channel_index_through_name(tokenized_message.params[0]);
+// 		OP_commands::execute_operator_cmd(tokenized_message, this->_client[client_index].get_nick_name(), this->_channel[channel_index]);
+// 	}
+//     else
+//         execute_command(error_message("421", "Unknown command"), client_index);
+
+//     // reset message after command
+//     this->_client[client_index].set_last_message((char *)"");
+// }
+
+void Server::execute_command(Server::msg_tokens tokenized_message, int client_index)
 {
-	if (!valid_client_index(client_index) || _client[client_index].get_sockfd() == -1)
+    if (!valid_client_index(client_index) || _client[client_index].get_sockfd() == -1)
 		return;
-    if (std::isdigit(tokenized_message.command[0]))
-    {
-        putstr_fd(":server ", this->_client[client_index].get_sockfd());
-        putstr_fd(tokenized_message.command, this->_client[client_index].get_sockfd());
-        putstr_fd(" ", this->_client[client_index].get_sockfd());
-        putstr_fd(this->_client[client_index].get_nick_name(), this->_client[client_index].get_sockfd());
-        putstr_fd(" :", this->_client[client_index].get_sockfd());
-        putstr_fd(tokenized_message.params[0], this->_client[client_index].get_sockfd());
-        putstr_fd("\n", this->_client[client_index].get_sockfd());
-    }
-    else if (!this->_client[client_index].get_authenticated() && tokenized_message.command != "PASS")
-        execute_command(error_message("464", "Password required"), client_index);
-    else if (tokenized_message.command == "PASS")
-        authenticateClient(tokenized_message, client_index);
-    else if (tokenized_message.command == "JOIN")
-        this->commands_join(tokenized_message, client_index);
-    else if (tokenized_message.command == "NICK")
-        this->commands_nick(tokenized_message, client_index);
-    else if (tokenized_message.command == "USER")
-        this->commands_user(tokenized_message, client_index);
-    else if (tokenized_message.command == "PRIVMSG")
-        this->commands_message(tokenized_message, client_index);
-    else if (tokenized_message.command == "PART")
-        this->commands_part(tokenized_message, client_index);
-    else if (tokenized_message.command == "PING")
-        this->commands_ping(tokenized_message, client_index);
-	else if (tokenized_message.command == "QUIT")
-		this->commands_quit(tokenized_message, client_index);
+	auto it = command_map.find(tokenized_message.command);
+	if (std::isdigit(tokenized_message.command[0]))
+		put_str_fd(tokenized_message, client_index);
+	else if (!this->_client[client_index].get_authenticated() && tokenized_message.command != "PASS")
+		execute_command(error_message("464", "Password required"), client_index);
+	else if (tokenized_message.command == "PASS")
+		authenticateClient(tokenized_message, client_index);
 	else if (tokenized_message.command == "KICK" || tokenized_message.command == "INVITE" ||
-				tokenized_message.command == "TOPIC" || tokenized_message.command == "MODE")
+			tokenized_message.command == "TOPIC" || tokenized_message.command == "MODE")
 	{
 		int channel_index = this->get_channel_index_through_name(tokenized_message.params[0]);
 		OP_commands::execute_operator_cmd(tokenized_message, this->_client[client_index].get_nick_name(), this->_channel[channel_index]);
 	}
+    else if (it != command_map.end() && it->second.handler)
+        (this->*(it->second.handler))(tokenized_message, client_index);
     else
         execute_command(error_message("421", "Unknown command"), client_index);
-
-    // reset message after command
     this->_client[client_index].set_last_message((char *)"");
+}
+
+void Server::put_str_fd(Server::msg_tokens tokenized_message, int client_index)
+{
+	putstr_fd(":server ", this->_client[client_index].get_sockfd());
+	putstr_fd(tokenized_message.command, this->_client[client_index].get_sockfd());
+	putstr_fd(" ", this->_client[client_index].get_sockfd());
+	putstr_fd(this->_client[client_index].get_nick_name(), this->_client[client_index].get_sockfd());
+	putstr_fd(" :", this->_client[client_index].get_sockfd());
+	putstr_fd(tokenized_message.params[0], this->_client[client_index].get_sockfd());
+	putstr_fd("\n", this->_client[client_index].get_sockfd());
 }
 
 void Server::commands_ping(struct msg_tokens tokenized_message, int client_index)

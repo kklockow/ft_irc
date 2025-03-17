@@ -43,7 +43,7 @@ std::string Client::get_nick_name()
     return (this->_nick_name);
 }
 
-void Client::set_last_message(char *message)
+void Client::set_last_message(const std::string& message)
 {
     std::string temp_message(message);
 

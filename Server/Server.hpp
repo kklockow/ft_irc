@@ -15,6 +15,8 @@
 #include <fcntl.h>
 #include <sstream>
 #include <algorithm>
+#include <unordered_map>
+
 
 class Server
 {
@@ -25,6 +27,22 @@ class Server
 			std::string                 command;
 			std::vector<std::string>    params;
 			std::string                 trailing;
+		};
+
+		struct CommandHandler
+		{
+			void (Server::*handler)(Server::msg_tokens, int);
+		};
+
+		const std::unordered_map<std::string, CommandHandler> command_map
+		= {
+			{"JOIN",   {&Server::commands_join}},
+			{"NICK",   {&Server::commands_nick}},
+			{"USER",   {&Server::commands_user}},
+			{"PRIVMSG", {&Server::commands_message}},
+			{"PART",   {&Server::commands_part}},
+			{"PING",   {&Server::commands_ping}},
+			{"QUIT",   {&Server::commands_quit}}
 		};
 
         bool                            running;
@@ -58,6 +76,7 @@ class Server
 		void							send_error_message(int client_index, std::string error_code, std::string message);
 		void							disconnect_client(int client_index);
 		void                            commands_quit(struct msg_tokens tokenized_message, int client_index);
+		void                            put_str_fd(msg_tokens tokenized_message, int client_index);
 
     public:
 		Server();

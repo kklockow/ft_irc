@@ -34,7 +34,7 @@ class Client
         void                set_nick_name(std::string new_nickname);
         std::string         get_nick_name();
         void                append_last_message(char *message);
-        void                set_last_message(char *message);
+		void                set_last_message(const std::string& message);
         std::string         get_last_message();
 		void				set_authenticated(bool flag);
 		bool				get_authenticated();
