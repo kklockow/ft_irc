@@ -146,15 +146,23 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
 		if (valid_channel_index(channel_index))
 			return ;
         client_list = this->_channel[channel_index].get_client_list();
-		if (this->_channel[channel_index].invite_only) //!!!check if code needed
+		if (this->_channel[channel_index].invite_only)
 		{
-			putstr_fd("Channel is set to invite only\n", this->_client[client_index].get_sockfd());
+			std::string err_Msg = ":server 473 "
+								+ this->_client[client_index].get_nick_name() + " "
+								+ this->_channel[channel_index].get_name()
+								+ " :Cannot join channel (invite only)\r\n";
+			putstr_fd(err_Msg, this->_client[client_index].get_sockfd());
 			return;
 		}
-		if (this->_channel[channel_index].user_limit <= client_list.size()) //!!!check if code needed
+		if (this->_channel[channel_index].user_limit <= client_list.size())
 		{
-			putstr_fd("Channel is full\n", this->_client[client_index].get_sockfd());
-			return ;
+			std::string err_Msg = ":server 471 "
+								+ this->_client[client_index].get_nick_name() + " "
+								+ this->_channel[channel_index].get_name()
+								+ " :Cannot join channel (Channel is full)\r\n";
+			putstr_fd(err_Msg, this->_client[client_index].get_sockfd());
+			return;
 		}
         for (unsigned int i = 0; i < client_list.size(); i++)
         {
