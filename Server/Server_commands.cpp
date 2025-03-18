@@ -213,6 +213,13 @@ void Server::commands_nick(struct msg_tokens tokenized_message, int client_index
 		return;
     int current_client_fd;
 
+
+    if (tokenized_message.params.empty() || tokenized_message.params[0].empty())
+    {
+        putstr_fd(":server 461 JOIN :Not enough parameters\n", this->_client[client_index].get_sockfd());
+        return ;
+    }
+
     // search for nickname in client vector
     for (unsigned int i = 0; i < this->_client.size(); i++)
     {
@@ -222,7 +229,7 @@ void Server::commands_nick(struct msg_tokens tokenized_message, int client_index
                                                     + tokenized_message.params[0]
                                                     + " is already in use\n";
 
-            putstr_fd(already_in_use_message, this->_client[i].get_sockfd());
+            putstr_fd(already_in_use_message, this->_client[client_index].get_sockfd());
             return ;
         }
     }
@@ -303,7 +310,7 @@ void Server::commands_message(struct msg_tokens tokenized_message, int client_in
             int recipient_index = this->get_client_index_through_name(client_name);
             if (valid_client_index(recipient_index) && recipient_index != client_index)
             {
-                std::string message = ":" 
+                std::string message = ":"
                                       + this->_client[client_index].get_nick_name()
                                       + "!"
                                       + this->_client[client_index].get_user_name()
@@ -325,7 +332,7 @@ void Server::commands_message(struct msg_tokens tokenized_message, int client_in
             putstr_fd(server_message, this->_client[client_index].get_sockfd());
             return;
         }
-        std::string message = ":" 
+        std::string message = ":"
                               + this->_client[client_index].get_nick_name()
                               + "!"
                               + this->_client[client_index].get_user_name()
