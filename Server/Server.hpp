@@ -9,7 +9,6 @@
 #include "../Utility/utils.hpp"
 #include "../Client/Client.hpp"
 #include "../Channel/Channel.hpp"
-// #include "../OP_cmds.hpp"
 #include <unistd.h>
 #include <vector>
 #include <fcntl.h>
@@ -91,4 +90,12 @@ class Server
         void                            loop();
         void                            end();
 		typedef struct msg_tokens		MsgTokens;
+		Client*							get_client_by_nickname(const std::string &nickname);
+		Channel* 						get_channel_by_name(const std::string &channel_name);
 };
+
+void	execute_operator_cmd(const Server::MsgTokens &tokenized_message, Client &operator_client, Server &server);
+void	kick_client(const Server::MsgTokens tokenized_message, Channel &channel, std::string target_nickname, Client &operator_client, Server &server);
+void	invite_client(Channel &channel, std::string target_nickname, Client &operator_client, Server &server);
+void	set_topic(const Server::MsgTokens &tokenized_message, Channel &channel, Client &operator_client, Server &server);
+void	check_mode(const Server::MsgTokens &tokenized_message, Channel &channel, Client &operator_client, Server &server);

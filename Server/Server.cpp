@@ -1,7 +1,6 @@
 
 #include "Server.hpp"
 #include "../Channel/Channel.hpp"
-#include "../OP_cmds.hpp"
 
 Server::Server()
 {
