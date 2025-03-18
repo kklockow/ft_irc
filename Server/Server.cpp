@@ -265,11 +265,6 @@ void Server::loop()
 {
 	while (this->running)
 	{
-		if (_poll_fd.empty())
-		{
-			usleep(10000);
-            continue ;
-		}
 		if (poll(&_poll_fd[0], _poll_fd.size(), -1) == -1)
 		{
 			std::cerr << "[ERROR] Poll failure: " << strerror(errno) << std::endl;
