@@ -213,7 +213,7 @@ void Server::receive_data(int client_index)
 		return ;
 	}
 	buffer[n] = '\0';
-	std::string_view last_message = _client[client_index].get_last_message();
+	std::string last_message = _client[client_index].get_last_message();
 	if (last_message.size() + n > 1024)
 	{
 		std::cerr << "[WARNING] Client " << client_fd
