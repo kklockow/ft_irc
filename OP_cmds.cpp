@@ -82,7 +82,7 @@ void	execute_operator_cmd(const Server::MsgTokens &tokenized_message, Client &op
 			putstr_fd(errorMsg, operator_client.get_sockfd());
 			return;
 		} 
-		invite_client(*channel, tokenized_message.params[1], operator_client, server);
+		invite_client(*channel, tokenized_message.params[0], operator_client, server);
 	}
 	else if (command == "TOPIC")
 	{
@@ -207,6 +207,7 @@ void invite_client(Channel &channel, std::string target_nickname, Client &operat
 							+ operator_client.get_nick_name() + " "
 							+ target_nickname + " " + channel.get_name() + "\r\n";
 		putstr_fd(reply, operator_client.get_sockfd());
+		channel.add_invited_to_channel(target_nickname);
 	}
 	else //target is already in the channel
 	{
@@ -344,7 +345,7 @@ void	check_mode(const Server::MsgTokens &tokenized_message, Channel &channel, Cl
 		if (channel.get_password().empty())
 			return;
 		if (tokenized_message.params[2] == channel.get_password())
-			channel.set_password(NULL);
+			channel.set_password("");
 		else
 		{
 			std::string errorMsg = ":server 475 "
@@ -438,10 +439,13 @@ void	check_mode(const Server::MsgTokens &tokenized_message, Channel &channel, Cl
 	}
 	//Notify all clients
 	std::vector<std::string> client_list = channel.get_client_list();
-	std::string notify_mode_msg = ":server MODE "
-										+ channel.get_name() + " "
-										+ tokenized_message.params[1] + " "
-										+ operator_client.get_nick_name() + "\r\n";
+	std::string notify_mode_msg = ":" + operator_client.get_nick_name() + "!"
+									+ operator_client.get_user_name() + "@localhost MODE "
+									+ channel.get_name() + " "
+									+ tokenized_message.params[1];
+	if (tokenized_message.params.size() > 2)
+		notify_mode_msg += " " + tokenized_message.params[2];
+	notify_mode_msg += "\r\n";
 	//notify all clients in the channel for topic change
 	for (std::vector<std::string>::const_iterator it = client_list.begin(); it != client_list.end(); ++it)
 	{

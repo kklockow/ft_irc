@@ -249,7 +249,7 @@ void Server::commands_nick(struct msg_tokens tokenized_message, int client_index
     {
         if (tokenized_message.params[0] == this->_client[i].get_nick_name())
         {
-            std::string already_in_use_message =    ":server 433 <nickname> :"
+            std::string already_in_use_message =    "433 <nickname> :"
                                                     + tokenized_message.params[0]
                                                     + " is already in use\n";
 
@@ -282,12 +282,12 @@ void Server::commands_user(struct msg_tokens tokenized_message, int client_index
     {
         if (tokenized_message.params[0] == this->_client[i].get_user_name())
         {
-            std::string already_in_use_message =    ":server 466 <username> :"
+            std::string already_in_use_message =    "466 <username> :"
                                                     + tokenized_message.params[0]
                                                     + " is already in use\n";
 
             putstr_fd(already_in_use_message, this->_client[i].get_sockfd());
-            //return ;
+            return ;
         }
     }
 
