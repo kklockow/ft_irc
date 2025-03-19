@@ -143,7 +143,7 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
     //if channel does exist
     if (channel_index != -1)
     {
-		if (valid_channel_index(channel_index))
+		if (!valid_channel_index(channel_index))
 			return ;
         client_list = this->_channel[channel_index].get_client_list();
 		if (this->_channel[channel_index].invite_only)
