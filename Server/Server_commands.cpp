@@ -359,7 +359,7 @@ void Server::commands_message(struct msg_tokens tokenized_message, int client_in
         for (const std::string &client_name : client_list)
         {
             int recipient_index = this->get_client_index_through_name(client_name);
-            if (valid_client_index(recipient_index) && recipient_index != client_index)
+            if (!valid_client_index(recipient_index) && recipient_index != client_index)
             {
                 std::string message = ":"
                                       + this->_client[client_index].get_nick_name()
