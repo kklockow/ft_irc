@@ -4,8 +4,14 @@
 
 Server::Server()
 {
-    _client.reserve(100);
-	_channel.reserve(40);
+	try {
+		_client.reserve(100);
+		_channel.reserve(40);
+	} catch (const std::bad_alloc &e)
+	{
+		std::cerr << "[ERROR] Memory allocation failed: " << e.what() << std::endl;
+		std::exit(EXIT_FAILURE);
+	}
 }
 
 Server::~Server()
@@ -13,13 +19,15 @@ Server::~Server()
     std::cout << "Shutting down server..." << std::endl;
 
     for (auto &client : this->_client)
-    {
-        close(client.get_sockfd());
-    }
-    this->_client.clear();
-    this->_poll_fd.clear();
-    this->_channel.clear();
-    close(this->_sockfd);
+	{
+		if (client.get_sockfd() != -1)
+			close(client.get_sockfd());
+	}
+	this->_client.clear();
+	this->_poll_fd.clear();
+	this->_channel.clear();
+	if (this->_sockfd != -1)
+		close(this->_sockfd);
 }
 
 Server::msg_tokens Server::error_message(std::string error_code, std::string message)
@@ -132,14 +140,23 @@ void Server::accept_client()
 		std::cerr << "[ERROR] Failed to accept client: " << strerror(errno) << std::endl;
 		return ;
 	}
-	Client               new_client;
-	new_client.set_sockfd(new_sockfd);
-	new_client.set_address(temp_client_address);
-	new_client.set_len(temp_client_len);
-	new_client.set_nick_name("none");
-	std::cout << "[INFO] New client connected (fd: " << new_sockfd << ")" << std::endl;
-    this->_client.emplace_back(new_client);
-    this->init_poll_struct(new_client.get_sockfd());
+
+	try
+	{
+		Client new_client;
+		new_client.set_sockfd(new_sockfd);
+		new_client.set_address(temp_client_address);
+		new_client.set_len(temp_client_len);
+		new_client.set_nick_name("none");
+		std::cout << "[INFO] New client connected (fd: " << new_sockfd << ")" << std::endl;
+		this->_client.emplace_back(new_client);
+		this->init_poll_struct(new_client.get_sockfd());
+	}
+	catch (const std::bad_alloc &e)
+	{
+		std::cerr << "[ERROR] Memory allocation failed while adding client: " << e.what() << std::endl;
+		close(new_sockfd);
+	}
 }
 
 void Server::disconnect_client(int client_index)
@@ -175,35 +192,44 @@ void Server::disconnect_client(int client_index)
 void Server::receive_data(int client_index)
 {
 	if (!valid_client_index(client_index) || _client[client_index].get_sockfd() == -1)
-		return;
-	if (client_index >= static_cast<int>(_client.size()))
 		return ;
 
-    char buffer[1028];
-    int client_fd = _client[client_index].get_sockfd();
-    int n = read(client_fd, buffer, sizeof(buffer) - 1);
+	char buffer[1024];
+	int client_fd = _client[client_index].get_sockfd();
+	int n = read(client_fd, buffer, sizeof(buffer) - 1);
 
-    if (n < 0)
-    {
-        if (errno == EWOULDBLOCK || errno == EAGAIN)
-            return ;
-
-        std::cerr << "ERROR reading from socket (Client: "
-                  << _client[client_index].get_nick_name()
-                  << "): " << strerror(errno) << std::endl;
-
-        send_error_message(client_index, "ERROR", strerror(errno));
-        disconnect_client(client_index);
-        return ;
-    }
-    if (n == 0)
-    {
-        disconnect_client(client_index);
-        return ;
-    }
-
-    buffer[n] = '\0';
-    _client[client_index].append_last_message(buffer);
+	if (n < 0)
+	{
+		if (errno == EWOULDBLOCK || errno == EAGAIN)
+			return ;
+		std::cerr << "[ERROR] Read error from client " << client_fd << ": " << strerror(errno) << std::endl;
+		send_error_message(client_index, "ERROR", strerror(errno));
+		disconnect_client(client_index);
+		return ;
+	}
+	if (n == 0)
+	{
+		disconnect_client(client_index);
+		return ;
+	}
+	buffer[n] = '\0';
+	std::string_view last_message = _client[client_index].get_last_message();
+	if (last_message.size() + n > 1024)
+	{
+		std::cerr << "[WARNING] Client " << client_fd
+				<< " exceeded max message size. Clearing buffer.\n";
+		_client[client_index].set_last_message("");
+		send_error_message(client_index, "417", "Message too long. Limit is 512 bytes.");
+		return ;
+	}
+	try
+	{
+		_client[client_index].append_last_message(buffer);
+	}
+	catch (const std::exception &e)
+	{
+		std::cerr << "[ERROR] Failed to append message: " << e.what() << std::endl;
+	}
 }
 
 Server::msg_tokens Server::parse_message_line(std::string line)
@@ -265,12 +291,19 @@ void Server::loop()
 {
 	while (this->running)
 	{
-		if (poll(&_poll_fd[0], _poll_fd.size(), -1) == -1)
+		int ret = poll(&_poll_fd[0], _poll_fd.size(), 10000);
+		if (ret == -1)
 		{
+			if (errno == EINTR)
+				continue ;
 			std::cerr << "[ERROR] Poll failure: " << strerror(errno) << std::endl;
+						if (_poll_fd.empty()) {
+				std::cerr << "[CRITICAL] No valid sockets remaining. Exiting...\n";
+				break ;
+			}
 			continue ;
 		}
-        for (int i = _poll_fd.size() - 1; i >= 0; i--)
+		for (int i = _poll_fd.size() - 1; i >= 0; i--)
 		{
 			if (_poll_fd[i].revents & POLLIN)
 			{
@@ -280,17 +313,18 @@ void Server::loop()
 				{
 					int client_index = i - 1;
 					if (client_index >= 0 && client_index < static_cast<int>(_client.size()))
-                    {
+					{
 						receive_data(client_index);
-						if (client_index < static_cast<int>(_client.size()) && this->_client[client_index].get_last_message().back() == '\n')
+						if (client_index < static_cast<int>(_client.size()) && !_client[client_index].get_last_message().empty() && _client[client_index].get_last_message().back() == '\n')
 							handle_data(client_index);
 					}
 				}
 			}
 		}
-        cleanup_disconnected_clients();
+		cleanup_disconnected_clients();
 	}
 }
+
 
 void Server::end()
 {
