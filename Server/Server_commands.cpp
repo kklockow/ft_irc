@@ -235,7 +235,12 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
 
     client_list = this->_channel[channel_index].get_client_list();
     for (unsigned int i = 0; i < client_list.size(); i++)
-        client_list_message += client_list[i] + " ";
+	{
+		std::string name = client_list[i];
+		if (this->_channel[channel_index].is_client_in_list(name, this->_channel[channel_index].get_operator_list()))
+			name = "@"+ name;
+        client_list_message += name + " ";
+	}
     client_list_message += "\n";
 
     putstr_fd(client_list_message, this->_client[client_index].get_sockfd());
