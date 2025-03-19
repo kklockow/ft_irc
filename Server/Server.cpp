@@ -150,12 +150,13 @@ void Server::disconnect_client(int client_index)
     std::cout << "Client " << nick << " disconnected." << std::endl;
 
     int client_fd = this->_client[client_index].get_sockfd();
-    close(client_fd);
 	_poll_fd.erase(
         std::remove_if(_poll_fd.begin(), _poll_fd.end(),
                        [client_fd](const struct pollfd &p)
 					   { return p.fd == client_fd; }),
         _poll_fd.end());
+	close(client_fd);
+	_client.erase(_client.begin() + client_index);
     for (auto &channel : _channel)
         channel.remove_client_from_list(nick);
 }
@@ -269,7 +270,7 @@ void Server::loop()
 			std::cerr << "[ERROR] Poll failure: " << strerror(errno) << std::endl;
 			continue ;
 		}
-		for (size_t i = _poll_fd.size(); i-- > 0;) 
+        for (int i = _poll_fd.size() - 1; i >= 0; i--)
 		{
 			if (_poll_fd[i].revents & POLLIN)
 			{
