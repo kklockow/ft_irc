@@ -405,14 +405,13 @@ void	check_mode(const Server::MsgTokens &tokenized_message, Channel &channel, Cl
 			putstr_fd(errorMsg, operator_client.get_sockfd());
 			return;
 		}
-		Client* target_client = server.get_client_by_nickname(tokenized_message.params[2]);
- 		if (!target_client)
- 		{
- 			std::string errorMsg = ":server 401 " + operator_client.get_nick_name()
- 									+ " " + tokenized_message.params[2] + " :No such client\r\n";
+		if (!channel.is_client_in_list(tokenized_message.params[2], channel.get_client_list())) // check if target is inside the channel
+		{
+			std::string errorMsg = ":server 441 " + operator_client.get_nick_name()
+ 									+ " " + channel.get_name() + " :User not in channel\r\n";
  			putstr_fd(errorMsg, operator_client.get_sockfd());
          	return;
- 		}
+		}
 		std::vector<std::string> operator_list = channel.get_operator_list();
 		if (std::find(operator_list.begin(), operator_list.end(), tokenized_message.params[2]) == operator_list.end()) //check if target is operator
 			channel.add_operator_to_channel(tokenized_message.params[2]);
