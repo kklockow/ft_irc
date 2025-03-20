@@ -261,42 +261,49 @@ void Server::commands_nick(struct msg_tokens tokenized_message, int client_index
 {
 	if (!valid_client_index(client_index) || _client[client_index].get_sockfd() == -1)
 		return;
-    int current_client_fd;
 
-
-    if (tokenized_message.params.empty() || tokenized_message.params[0].empty())
-    {
-        putstr_fd(":server 461 JOIN :Not enough parameters\n", this->_client[client_index].get_sockfd());
-        return ;
-    }
-
-    // search for nickname in client vector
-    for (unsigned int i = 0; i < this->_client.size(); i++)
-    {
-        if (tokenized_message.params[0] == this->_client[i].get_nick_name())
-        {
-            std::string already_in_use_message =    ":server 433 <nickname> :"
-                                                    + tokenized_message.params[0]
-                                                    + " is already in use\n";
-
-            putstr_fd(already_in_use_message, this->_client[client_index].get_sockfd());
-            return ;
-        }
-    }
-    // broadcast that nick was changed
-    for (unsigned int i = 0; i < this->_client.size(); i++)
-    {
-        current_client_fd = this->_client[i].get_sockfd();
-        std::string server_answer = ":"
-                                    + this->_client[client_index].get_nick_name()
-                                    + "!"
-                                    + this->_client[client_index].get_user_name()
-                                    + "@localhost NICK :"
-                                    + tokenized_message.params[0]
-                                    + "\n";
-        putstr_fd(server_answer, current_client_fd);
-    }
-    this->_client[client_index].set_nick_name(tokenized_message.params[0]);
+	if (tokenized_message.params.empty() || tokenized_message.params[0].empty())
+	{
+		putstr_fd(":server 461 NICK :Not enough parameters\n", this->_client[client_index].get_sockfd());
+		return;
+	}
+	std::string requested_nick = tokenized_message.params[0];
+	std::string new_nick = requested_nick;
+	int suffix = 1;
+	while (true)
+	{
+		bool name_taken = false;
+		for (unsigned int i = 0; i < this->_client.size(); i++)
+		{
+			if (this->_client[i].get_nick_name() == new_nick)
+			{
+				name_taken = true;
+				break ;
+			}
+		}
+		if (!name_taken)
+			break ;
+		new_nick = requested_nick + std::to_string(suffix);
+		suffix++;
+	}
+	std::string server_answer = ":" 
+								+ this->_client[client_index].get_nick_name()
+								+ "!"
+								+ this->_client[client_index].get_user_name()
+								+ "@localhost NICK :"
+								+ new_nick
+								+ "\n";
+	for (unsigned int i = 0; i < this->_client.size(); i++)
+	{
+		putstr_fd(server_answer, this->_client[i].get_sockfd());
+	}
+	this->_client[client_index].set_nick_name(new_nick);
+	if (new_nick != requested_nick)
+	{
+		std::string nickname_changed_message = ":server 433 " + requested_nick 
+											+ " :Nickname is already in use. Assigned new nickname: " + new_nick + "\n";
+		putstr_fd(nickname_changed_message, this->_client[client_index].get_sockfd());
+	}
 }
 
 void Server::commands_user(struct msg_tokens tokenized_message, int client_index)
@@ -333,8 +340,6 @@ void Server::commands_user(struct msg_tokens tokenized_message, int client_index
 // https://chi.cs.uchicago.edu/chirc/irc_examples.html
 // different newer protocol also works for kvirc
 
-
-
 void Server::commands_message(struct msg_tokens tokenized_message, int client_index)
 {
 	if (!valid_client_index(client_index) || _client[client_index].get_sockfd() == -1)
@@ -358,7 +363,7 @@ void Server::commands_message(struct msg_tokens tokenized_message, int client_in
         for (const std::string &client_name : client_list)
         {
             int recipient_index = this->get_client_index_through_name(client_name);
-            if (!valid_client_index(recipient_index) && recipient_index != client_index)
+            if (valid_client_index(recipient_index) && recipient_index != client_index)
             {
                 std::string message = ":"
                                       + this->_client[client_index].get_nick_name()
@@ -394,9 +399,6 @@ void Server::commands_message(struct msg_tokens tokenized_message, int client_in
         putstr_fd(message, this->_client[recipient_index].get_sockfd());
     }
 }
-
-
-
 
 void Server::commands_part(struct msg_tokens tokenized_message, int client_index)
 {
@@ -460,8 +462,6 @@ void Server::commands_part(struct msg_tokens tokenized_message, int client_index
     std::string not_in_channel_message = ":server 442 " + tokenized_message.params[0] + " :You're not on that channel\n";
     putstr_fd(not_in_channel_message, this->_client[client_index].get_sockfd());
 }
-
-
 
 void Server::commands_quit(struct msg_tokens tokenized_message, int client_index)
 {
