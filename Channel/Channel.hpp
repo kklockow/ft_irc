@@ -35,4 +35,5 @@ class Channel
 		void								add_invited_to_channel(const std::string &client_name);
 		const std::vector<std::string>&		get_invited_list() const;
 		bool								is_client_in_list(const std::string &client_name, const std::vector<std::string> &list) const;
+		void								remove_client_from_all_lists(const std::string &client_name);
 };

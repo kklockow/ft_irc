@@ -85,3 +85,10 @@ bool Channel::is_client_in_list(const std::string &client_name, const std::vecto
 {
 	return std::find(list.begin(), list.end(), client_name) != list.end();
 }
+
+void Channel::remove_client_from_all_lists(const std::string &client_name)
+{
+	this->_client.erase(std::remove(this->_client.begin(), this->_client.end(), client_name), this->_client.end());
+	this->_operators.erase(std::remove(this->_operators.begin(), this->_operators.end(), client_name), this->_operators.end());
+	this->_invited.erase(std::remove(this->_invited.begin(), this->_invited.end(), client_name), this->_invited.end());
+}

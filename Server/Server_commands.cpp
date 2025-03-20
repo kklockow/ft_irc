@@ -414,7 +414,7 @@ void Server::commands_part(struct msg_tokens tokenized_message, int client_index
     // channel doesnt exist
     if (!(valid_channel_index(channel_index)))
     {
-        std::string nonexist_message = "403 " + tokenized_message.params[0] + " :No such channel\n";
+        std::string nonexist_message = ":server 403 " + tokenized_message.params[0] + " :No such channel\n";
         putstr_fd(nonexist_message, this->_client[client_index].get_sockfd());
         return ;
     }
@@ -437,12 +437,12 @@ void Server::commands_part(struct msg_tokens tokenized_message, int client_index
                                         + "\n";
                 putstr_fd(message, this->_client[current_client_index].get_sockfd());
             }
-            this->_channel[channel_index].remove_client_from_list(this->_client[client_index].get_nick_name());
+            this->_channel[channel_index].remove_client_from_all_lists(this->_client[client_index].get_nick_name());
             return ;
         }
     }
     // user not on channel
-    std::string not_in_channel_message = "442 " + tokenized_message.params[0] + " :You're not on that channel\n";
+    std::string not_in_channel_message = ":server 442 " + tokenized_message.params[0] + " :You're not on that channel\n";
     putstr_fd(not_in_channel_message, this->_client[client_index].get_sockfd());
 }
 
