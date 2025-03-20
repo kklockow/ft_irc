@@ -362,3 +362,13 @@ bool Server::authenticateClient(const msg_tokens &tokenized_message, int client_
 	this->_client[client_index].set_authenticated(true);
 	return (true);
 }
+
+void Server::cleanup_empty_channels()
+{
+	for (int i = _channel.size() - 1; i >= 0; i--) {
+		// If the channel has no clients, remove it
+		if (_channel[i].get_client_list().empty()) {
+			_channel.erase(_channel.begin() + i);
+		}
+	}
+}

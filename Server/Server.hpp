@@ -92,6 +92,7 @@ class Server
 		typedef struct msg_tokens		MsgTokens;
 		Client*							get_client_by_nickname(const std::string &nickname);
 		Channel* 						get_channel_by_name(const std::string &channel_name);
+		void							cleanup_empty_channels();
 };
 
 void	execute_operator_cmd(const Server::MsgTokens &tokenized_message, Client &operator_client, Server &server);

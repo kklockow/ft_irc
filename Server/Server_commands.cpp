@@ -438,6 +438,7 @@ void Server::commands_part(struct msg_tokens tokenized_message, int client_index
                 putstr_fd(message, this->_client[current_client_index].get_sockfd());
             }
             this->_channel[channel_index].remove_client_from_all_lists(this->_client[client_index].get_nick_name());
+			cleanup_empty_channels();
             return ;
         }
     }
@@ -475,6 +476,7 @@ void Server::commands_quit(struct msg_tokens tokenized_message, int client_index
             channel.remove_client_from_all_lists(nick);
         }
     }
+	cleanup_empty_channels();
     putstr_fd(quit_msg, this->_client[client_index].get_sockfd());
     disconnect_client(client_index);
 }
