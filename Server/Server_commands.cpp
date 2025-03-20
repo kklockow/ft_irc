@@ -438,7 +438,21 @@ void Server::commands_part(struct msg_tokens tokenized_message, int client_index
                 putstr_fd(message, this->_client[current_client_index].get_sockfd());
             }
             this->_channel[channel_index].remove_client_from_all_lists(this->_client[client_index].get_nick_name());
-			cleanup_empty_channels();
+			if (_channel[channel_index].get_operator_list().empty() && !_channel[channel_index].get_client_list().empty())
+			{
+				std::string notify_new_operator = ":server MODE "
+													+ _channel[channel_index].get_name() + " +o "
+													+ _channel[channel_index].get_client_list().front() + "\r\n";
+				_channel[channel_index].add_operator_to_channel(_channel[channel_index].get_client_list().front());	
+				for (std::vector<std::string>::const_iterator it = _channel[channel_index].get_client_list().begin(); it != _channel[channel_index].get_client_list().end(); ++it)
+				{
+					Client* client = get_client_by_nickname(*it);
+					if (client)
+					putstr_fd(notify_new_operator, client->get_sockfd());
+				}
+			}
+			
+				cleanup_empty_channels();
             return ;
         }
     }
@@ -474,9 +488,22 @@ void Server::commands_quit(struct msg_tokens tokenized_message, int client_index
                     putstr_fd(quit_msg, this->_client[target_index].get_sockfd());
             }
             channel.remove_client_from_all_lists(nick);
+			if (channel.get_operator_list().empty() && !channel.get_client_list().empty())
+			{
+				std::string notify_new_operator = ":server MODE "
+												+ channel.get_name() + " +o "
+												+ channel.get_client_list().front() + "\r\n";
+				channel.add_operator_to_channel(channel.get_client_list().front());
+				for (std::vector<std::string>::const_iterator it = channel.get_client_list().begin(); it != channel.get_client_list().end(); ++it)
+				{
+					Client* client = get_client_by_nickname(*it);
+					if (client)
+					putstr_fd(notify_new_operator, client->get_sockfd());
+				}
+			}
         }
     }
+    putstr_fd(quit_msg, this->_client[client_index].get_sockfd());	
 	cleanup_empty_channels();
-    putstr_fd(quit_msg, this->_client[client_index].get_sockfd());
     disconnect_client(client_index);
 }
