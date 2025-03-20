@@ -98,6 +98,7 @@ void Server::commands_join_message_clients(std::string channel_name, int client_
 		return;
     int                         channel_index = 0;
     std::vector<std::string>    client_list;
+	int							current_client_index = 0;
 
 	if (!valid_client_index(client_index))
     {
@@ -113,6 +114,7 @@ void Server::commands_join_message_clients(std::string channel_name, int client_
     client_list = this->_channel[channel_index].get_client_list();
     for (unsigned int i = 0; i < client_list.size(); i++)
     {
+		current_client_index = get_client_index_through_name(client_list[i]);
 		std::string message_to_clients =    ":"
 										+ this->_client[client_index].get_nick_name()
 										+ "!"
@@ -120,7 +122,7 @@ void Server::commands_join_message_clients(std::string channel_name, int client_
 										+ "@localhost JOIN "
 										+ channel_name
 										+ "\n";
-		putstr_fd(message_to_clients, this->_client[client_index ].get_sockfd());
+		putstr_fd(message_to_clients, this->_client[current_client_index].get_sockfd());
     }
 }
 
@@ -148,12 +150,15 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
         client_list = this->_channel[channel_index].get_client_list();
 		if (this->_channel[channel_index].invite_only)
 		{
-			std::string err_Msg = ":server 473 "
-								+ this->_client[client_index].get_nick_name() + " "
-								+ this->_channel[channel_index].get_name()
-								+ " :Cannot join channel (invite only)\r\n";
-			putstr_fd(err_Msg, this->_client[client_index].get_sockfd());
-			return;
+			if(!this->_channel[channel_index].is_client_in_list(this->_client[client_index].get_nick_name(), this->_channel[channel_index].get_invited_list()))
+            {
+                std::string err_Msg = ":server 473 "
+                                    + this->_client[client_index].get_nick_name() + " "
+                                    + this->_channel[channel_index].get_name()
+                                    + " :Cannot join channel (invite only)\r\n";
+                putstr_fd(err_Msg, this->_client[client_index].get_sockfd());
+                return;
+            }
 		}
 		if (this->_channel[channel_index].user_limit <= client_list.size())
 		{
@@ -163,6 +168,20 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
 								+ " :Cannot join channel (Channel is full)\r\n";
 			putstr_fd(err_Msg, this->_client[client_index].get_sockfd());
 			return;
+		}
+		if (!this->_channel[channel_index].get_password().empty()
+			&& !this->_channel[channel_index].is_client_in_list(this->_client[client_index].get_nick_name(), this->_channel[channel_index].get_invited_list()))
+		{
+			if (tokenized_message.params.size() < 2)
+			{
+				putstr_fd(":server 461 JOIN :Not enough parameters - channel key required\n", this->_client[client_index].get_sockfd());
+				return;
+			}
+			else if (tokenized_message.params[1] != this->_channel[channel_index].get_password())
+			{
+				putstr_fd(":server 475 " + tokenized_message.params[0] + " :Cannot join channel (Incorrect channel key)\n", this->_client[client_index].get_sockfd());
+				return;
+			}
 		}
         for (unsigned int i = 0; i < client_list.size(); i++)
         {
@@ -215,7 +234,12 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
 
     client_list = this->_channel[channel_index].get_client_list();
     for (unsigned int i = 0; i < client_list.size(); i++)
-        client_list_message += client_list[i] + " ";
+    {
+		std::string name = client_list[i];
+		if (this->_channel[channel_index].is_client_in_list(name, this->_channel[channel_index].get_operator_list()))
+			name = "@"+ name;
+        client_list_message += name + " ";
+	}
     client_list_message += "\n";
 
     putstr_fd(client_list_message, this->_client[client_index].get_sockfd());
@@ -228,6 +252,8 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
                                         + " :End of /NAMES list\n";
 
     putstr_fd(end_of_names_message, this->_client[client_index].get_sockfd());
+	//removes client from invited list
+	this->_channel[channel_index].remove_invited_from_channel(this->_client[client_index].get_nick_name());
     //proper message and error handling still needed
 }
 
@@ -249,7 +275,7 @@ void Server::commands_nick(struct msg_tokens tokenized_message, int client_index
     {
         if (tokenized_message.params[0] == this->_client[i].get_nick_name())
         {
-            std::string already_in_use_message =    "433 <nickname> :"
+            std::string already_in_use_message =    ":server 433 <nickname> :"
                                                     + tokenized_message.params[0]
                                                     + " is already in use\n";
 
@@ -278,18 +304,18 @@ void Server::commands_user(struct msg_tokens tokenized_message, int client_index
 	if (!valid_client_index(client_index) || _client[client_index].get_sockfd() == -1)
 		return;
     //check for already taken username
-    for (unsigned int i = 0; i < this->_client.size(); i++)
-    {
-        if (tokenized_message.params[0] == this->_client[i].get_user_name())
-        {
-            std::string already_in_use_message =    "466 <username> :"
-                                                    + tokenized_message.params[0]
-                                                    + " is already in use\n";
+    // for (unsigned int i = 0; i < this->_client.size(); i++)
+    // {
+    //     if (tokenized_message.params[0] == this->_client[i].get_user_name())
+    //     {
+    //         std::string already_in_use_message =    ":server 466 <username> :"
+    //                                                 + tokenized_message.params[0]
+    //                                                 + " is already in use\n";
 
-            putstr_fd(already_in_use_message, this->_client[i].get_sockfd());
-            return ;
-        }
-    }
+    //         putstr_fd(already_in_use_message, this->_client[i].get_sockfd());
+    //         return ;
+    //     }
+    // }
 
     this->_client[client_index].set_user_name(tokenized_message.params[0]);
 
