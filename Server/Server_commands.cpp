@@ -472,7 +472,7 @@ void Server::commands_quit(struct msg_tokens tokenized_message, int client_index
                 if (target_index != -1 && target_index != client_index)
                     putstr_fd(quit_msg, this->_client[target_index].get_sockfd());
             }
-            channel.remove_client_from_list(nick);
+            channel.remove_client_from_all_lists(nick);
         }
     }
     putstr_fd(quit_msg, this->_client[client_index].get_sockfd());
