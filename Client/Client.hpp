@@ -25,6 +25,7 @@ class Client
     public:
 		Client();
 
+		std::string			output_buffer;
         void                set_sockfd(int new_sockfd);
         int                 get_sockfd() const;
         void                set_address(struct sockaddr_in new_sockaddr_in);

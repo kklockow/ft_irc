@@ -77,8 +77,8 @@ class Server
 		void                            commands_quit(struct msg_tokens tokenized_message, int client_index);
 		void                            put_str_fd(msg_tokens tokenized_message, int client_index);
 		void                            cleanup_disconnected_clients();
-
-    public:
+		
+		public:
 		Server();
 		~Server();
 		bool                            valid_channel_index(int index);
@@ -93,6 +93,8 @@ class Server
 		Client*							get_client_by_nickname(const std::string &nickname);
 		Channel* 						get_channel_by_name(const std::string &channel_name);
 		void							cleanup_empty_channels();
+		Client*							get_client_by_fd(int fd);
+		void							send_to_client(const std::string &msg, Client &client);
 };
 
 void	execute_operator_cmd(const Server::MsgTokens &tokenized_message, Client &operator_client, Server &server);

@@ -7,13 +7,13 @@
 // 		return;
 //     if (std::isdigit(tokenized_message.command[0]))
 //     {
-//         putstr_fd(":server ", this->_client[client_index].get_sockfd());
-//         putstr_fd(tokenized_message.command, this->_client[client_index].get_sockfd());
-//         putstr_fd(" ", this->_client[client_index].get_sockfd());
-//         putstr_fd(this->_client[client_index].get_nick_name(), this->_client[client_index].get_sockfd());
-//         putstr_fd(" :", this->_client[client_index].get_sockfd());
-//         putstr_fd(tokenized_message.params[0], this->_client[client_index].get_sockfd());
-//         putstr_fd("\n", this->_client[client_index].get_sockfd());
+//         send_to_client(":server ", this->_client[client_index].get_sockfd());
+//         send_to_client(tokenized_message.command, this->_client[client_index].get_sockfd());
+//         send_to_client(" ", this->_client[client_index].get_sockfd());
+//         send_to_client(this->_client[client_index].get_nick_name(), this->_client[client_index].get_sockfd());
+//         send_to_client(" :", this->_client[client_index].get_sockfd());
+//         send_to_client(tokenized_message.params[0], this->_client[client_index].get_sockfd());
+//         send_to_client("\n", this->_client[client_index].get_sockfd());
 //     }
 //     else if (!this->_client[client_index].get_authenticated() && tokenized_message.command != "PASS")
 //         execute_command(error_message("464", "Password required"), client_index);
@@ -71,25 +71,25 @@ void Server::execute_command(Server::msg_tokens tokenized_message, int client_in
 
 void Server::put_str_fd(Server::msg_tokens tokenized_message, int client_index)
 {
-	putstr_fd(":server ", this->_client[client_index].get_sockfd());
-	putstr_fd(tokenized_message.command, this->_client[client_index].get_sockfd());
-	putstr_fd(" ", this->_client[client_index].get_sockfd());
-	putstr_fd(this->_client[client_index].get_nick_name(), this->_client[client_index].get_sockfd());
-	putstr_fd(" :", this->_client[client_index].get_sockfd());
-	putstr_fd(tokenized_message.params[0], this->_client[client_index].get_sockfd());
-	putstr_fd("\n", this->_client[client_index].get_sockfd());
+	send_to_client(":server ", this->_client[client_index]);
+	send_to_client(tokenized_message.command, this->_client[client_index]);
+	send_to_client(" ", this->_client[client_index]);
+	send_to_client(this->_client[client_index].get_nick_name(), this->_client[client_index]);
+	send_to_client(" :", this->_client[client_index]);
+	send_to_client(tokenized_message.params[0], this->_client[client_index]);
+	send_to_client("\n", this->_client[client_index]);
 }
 
 void Server::commands_ping(struct msg_tokens tokenized_message, int client_index)
 {
 	if (!valid_client_index(client_index) || _client[client_index].get_sockfd() == -1)
 		return;
-    putstr_fd(":server PONG ", this->_client[client_index].get_sockfd());
+    send_to_client(":server PONG ", this->_client[client_index]);
     if (tokenized_message.params.empty())
-        putstr_fd("server", this->_client[client_index].get_sockfd());
+        send_to_client("server", this->_client[client_index]);
     else
-        putstr_fd(tokenized_message.params[0], this->_client[client_index].get_sockfd());
-    putstr_fd("\n", this->_client[client_index].get_sockfd());
+        send_to_client(tokenized_message.params[0], this->_client[client_index]);
+    send_to_client("\n", this->_client[client_index]);
 }
 
 void Server::commands_join_message_clients(std::string channel_name, int client_index)
@@ -122,7 +122,7 @@ void Server::commands_join_message_clients(std::string channel_name, int client_
 										+ "@localhost JOIN "
 										+ channel_name
 										+ "\n";
-		putstr_fd(message_to_clients, this->_client[current_client_index].get_sockfd());
+		send_to_client(message_to_clients, this->_client[current_client_index]);
     }
 }
 
@@ -137,7 +137,7 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
 
     if (tokenized_message.params.empty() || tokenized_message.params[0].empty())
     {
-        putstr_fd(":server 461 JOIN :Not enough parameters\n", this->_client[client_index].get_sockfd());
+        send_to_client(":server 461 JOIN :Not enough parameters\n", this->_client[client_index]);
         return ;
     }
 
@@ -156,7 +156,7 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
                                     + this->_client[client_index].get_nick_name() + " "
                                     + this->_channel[channel_index].get_name()
                                     + " :Cannot join channel (invite only)\r\n";
-                putstr_fd(err_Msg, this->_client[client_index].get_sockfd());
+                send_to_client(err_Msg, this->_client[client_index]);
                 return;
             }
 		}
@@ -166,7 +166,7 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
 								+ this->_client[client_index].get_nick_name() + " "
 								+ this->_channel[channel_index].get_name()
 								+ " :Cannot join channel (Channel is full)\r\n";
-			putstr_fd(err_Msg, this->_client[client_index].get_sockfd());
+			send_to_client(err_Msg, this->_client[client_index]);
 			return;
 		}
 		if (!this->_channel[channel_index].get_password().empty()
@@ -174,12 +174,12 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
 		{
 			if (tokenized_message.params.size() < 2)
 			{
-				putstr_fd(":server 461 JOIN :Not enough parameters - channel key required\n", this->_client[client_index].get_sockfd());
+				send_to_client(":server 461 JOIN :Not enough parameters - channel key required\n", this->_client[client_index]);
 				return;
 			}
 			else if (tokenized_message.params[1] != this->_channel[channel_index].get_password())
 			{
-				putstr_fd(":server 475 " + tokenized_message.params[0] + " :Cannot join channel (Incorrect channel key)\n", this->_client[client_index].get_sockfd());
+				send_to_client(":server 475 " + tokenized_message.params[0] + " :Cannot join channel (Incorrect channel key)\n", this->_client[client_index]);
 				return;
 			}
 		}
@@ -187,9 +187,9 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
         {
             if (client_list[i] == this->_client[client_index].get_nick_name())
             {
-                putstr_fd(":server 443 " + this->_client[client_index].get_nick_name() + " "
+                send_to_client(":server 443 " + this->_client[client_index].get_nick_name() + " "
                         + tokenized_message.params[0] + " :You're already in this channel\n",
-                        this->_client[client_index].get_sockfd());
+                        this->_client[client_index]);
                 return ;
             }
         }
@@ -215,7 +215,7 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
 							+ this->_client[client_index].get_nick_name() + " "
 							+ tokenized_message.params[0]
 							+ " :No topic is set\r\n";
-		putstr_fd(reply, this->_client[client_index].get_sockfd());
+		send_to_client(reply, this->_client[client_index]);
 	}
 	else
 	{
@@ -223,7 +223,7 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
 							+ this->_client[client_index].get_nick_name() + " "
 							+ tokenized_message.params[0]
 							+ " :" + this->_channel[channel_index].get_topic() + "\r\n";
-		putstr_fd(reply, this->_client[client_index].get_sockfd());
+		send_to_client(reply, this->_client[client_index]);
 	}
     // write a list of all clients in channel to new joined client
     std::string client_list_message =   ":server 353 "
@@ -242,7 +242,7 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
 	}
     client_list_message += "\n";
 
-    putstr_fd(client_list_message, this->_client[client_index].get_sockfd());
+    send_to_client(client_list_message, this->_client[client_index]);
 
     //write end of names list to client
     std::string end_of_names_message =  ":server 366 "
@@ -251,7 +251,7 @@ void Server::commands_join(struct msg_tokens tokenized_message, int client_index
                                         + tokenized_message.params[0]
                                         + " :End of /NAMES list\n";
 
-    putstr_fd(end_of_names_message, this->_client[client_index].get_sockfd());
+    send_to_client(end_of_names_message, this->_client[client_index]);
 	//removes client from invited list
 	this->_channel[channel_index].remove_invited_from_channel(this->_client[client_index].get_nick_name());
     //proper message and error handling still needed
@@ -264,7 +264,7 @@ void Server::commands_nick(struct msg_tokens tokenized_message, int client_index
 
 	if (tokenized_message.params.empty() || tokenized_message.params[0].empty())
 	{
-		putstr_fd(":server 461 NICK :Not enough parameters\n", this->_client[client_index].get_sockfd());
+		send_to_client(":server 461 NICK :Not enough parameters\n", this->_client[client_index]);
 		return;
 	}
 	std::string requested_nick = tokenized_message.params[0];
@@ -295,14 +295,14 @@ void Server::commands_nick(struct msg_tokens tokenized_message, int client_index
 								+ "\n";
 	for (unsigned int i = 0; i < this->_client.size(); i++)
 	{
-		putstr_fd(server_answer, this->_client[i].get_sockfd());
+		send_to_client(server_answer, this->_client[i]);
 	}
 	this->_client[client_index].set_nick_name(new_nick);
 	if (new_nick != requested_nick)
 	{
 		std::string nickname_changed_message = ":server 433 " + requested_nick 
 											+ " :Nickname is already in use. Assigned new nickname: " + new_nick + "\n";
-		putstr_fd(nickname_changed_message, this->_client[client_index].get_sockfd());
+		send_to_client(nickname_changed_message, this->_client[client_index]);
 	}
 }
 
@@ -319,7 +319,7 @@ void Server::commands_user(struct msg_tokens tokenized_message, int client_index
     //                                                 + tokenized_message.params[0]
     //                                                 + " is already in use\n";
 
-    //         putstr_fd(already_in_use_message, this->_client[i].get_sockfd());
+    //         send_to_client(already_in_use_message, this->_client[i].get_sockfd());
     //         return ;
     //     }
     // }
@@ -334,7 +334,7 @@ void Server::commands_user(struct msg_tokens tokenized_message, int client_index
                                     + this->_client[client_index].get_user_name()
                                     + "@localhost\n";
 
-    putstr_fd(welcome_message, this->_client[client_index].get_sockfd());
+    send_to_client(welcome_message, this->_client[client_index]);
 }
 // https://datatracker.ietf.org/doc/html/rfc2812#section-5
 // https://chi.cs.uchicago.edu/chirc/irc_examples.html
@@ -346,7 +346,7 @@ void Server::commands_message(struct msg_tokens tokenized_message, int client_in
 		return;
     if (tokenized_message.params.empty() || tokenized_message.params[0].empty())
     {
-        putstr_fd(":server 461 PRIVMSG :Not enough parameters\n", this->_client[client_index].get_sockfd());
+        send_to_client(":server 461 PRIVMSG :Not enough parameters\n", this->_client[client_index]);
         return;
     }
     std::string target = tokenized_message.params[0];
@@ -356,7 +356,7 @@ void Server::commands_message(struct msg_tokens tokenized_message, int client_in
         if (!valid_channel_index(channel_index))
         {
             std::string server_message = ":server 403 " + target + " :No such channel\n";
-            putstr_fd(server_message, this->_client[client_index].get_sockfd());
+            send_to_client(server_message, this->_client[client_index]);
             return;
         }
         std::vector<std::string> client_list = this->_channel[channel_index].get_client_list();
@@ -374,7 +374,7 @@ void Server::commands_message(struct msg_tokens tokenized_message, int client_in
                                       + " :"
                                       + tokenized_message.trailing
                                       + "\n";
-                putstr_fd(message, this->_client[recipient_index].get_sockfd());
+                send_to_client(message, this->_client[recipient_index]);
             }
         }
     }
@@ -384,7 +384,7 @@ void Server::commands_message(struct msg_tokens tokenized_message, int client_in
         if (!valid_client_index(recipient_index))
         {
             std::string server_message = ":server 401 " + target + " :No such nick\n";
-            putstr_fd(server_message, this->_client[client_index].get_sockfd());
+            send_to_client(server_message, this->_client[client_index]);
             return;
         }
         std::string message = ":"
@@ -396,7 +396,7 @@ void Server::commands_message(struct msg_tokens tokenized_message, int client_in
                               + " :"
                               + tokenized_message.trailing
                               + "\n";
-        putstr_fd(message, this->_client[recipient_index].get_sockfd());
+        send_to_client(message, this->_client[recipient_index]);
     }
 }
 
@@ -407,7 +407,7 @@ void Server::commands_part(struct msg_tokens tokenized_message, int client_index
     //check if params vector is empty
     if (tokenized_message.params.empty() || tokenized_message.params[0].empty())
     {
-        putstr_fd(":server 461 PART :Not enough parameters\n", this->_client[client_index].get_sockfd());
+        send_to_client(":server 461 PART :Not enough parameters\n", this->_client[client_index]);
         return ;
     }
 
@@ -417,7 +417,7 @@ void Server::commands_part(struct msg_tokens tokenized_message, int client_index
     if (!(valid_channel_index(channel_index)))
     {
         std::string nonexist_message = ":server 403 " + tokenized_message.params[0] + " :No such channel\n";
-        putstr_fd(nonexist_message, this->_client[client_index].get_sockfd());
+        send_to_client(nonexist_message, this->_client[client_index]);
         return ;
     }
 
@@ -437,7 +437,7 @@ void Server::commands_part(struct msg_tokens tokenized_message, int client_index
                                         + "@localhost PART "
                                         + tokenized_message.params[0]
                                         + "\n";
-                putstr_fd(message, this->_client[current_client_index].get_sockfd());
+                send_to_client(message, this->_client[current_client_index]);
             }
             this->_channel[channel_index].remove_client_from_all_lists(this->_client[client_index].get_nick_name());
 			if (_channel[channel_index].get_operator_list().empty() && !_channel[channel_index].get_client_list().empty())
@@ -450,7 +450,7 @@ void Server::commands_part(struct msg_tokens tokenized_message, int client_index
 				{
 					Client* client = get_client_by_nickname(*it);
 					if (client)
-					putstr_fd(notify_new_operator, client->get_sockfd());
+					send_to_client(notify_new_operator, *client);
 				}
 			}
 			
@@ -460,7 +460,7 @@ void Server::commands_part(struct msg_tokens tokenized_message, int client_index
     }
     // user not on channel
     std::string not_in_channel_message = ":server 442 " + tokenized_message.params[0] + " :You're not on that channel\n";
-    putstr_fd(not_in_channel_message, this->_client[client_index].get_sockfd());
+    send_to_client(not_in_channel_message, this->_client[client_index]);
 }
 
 void Server::commands_quit(struct msg_tokens tokenized_message, int client_index)
@@ -485,7 +485,7 @@ void Server::commands_quit(struct msg_tokens tokenized_message, int client_index
             {
                 int target_index = get_client_index_through_name(client_name);
                 if (target_index != -1 && target_index != client_index)
-                    putstr_fd(quit_msg, this->_client[target_index].get_sockfd());
+                    send_to_client(quit_msg, this->_client[target_index]);
             }
             channel.remove_client_from_all_lists(nick);
 			if (channel.get_operator_list().empty() && !channel.get_client_list().empty())
@@ -498,12 +498,12 @@ void Server::commands_quit(struct msg_tokens tokenized_message, int client_index
 				{
 					Client* client = get_client_by_nickname(*it);
 					if (client)
-					putstr_fd(notify_new_operator, client->get_sockfd());
+					send_to_client(notify_new_operator, *client);
 				}
 			}
         }
     }
-    putstr_fd(quit_msg, this->_client[client_index].get_sockfd());	
+    send_to_client(quit_msg, this->_client[client_index]);	
 	cleanup_empty_channels();
     disconnect_client(client_index);
 }

@@ -41,7 +41,7 @@ void Server::send_error_message(int client_index, std::string error_code, std::s
 		return;
     msg_tokens error_msg = error_message(error_code, message);
     std::string formatted_error = ":" + error_msg.command + " " + error_msg.params[0] + "\n";
-    putstr_fd(formatted_error, this->_client[client_index].get_sockfd());
+    send_to_client(formatted_error, this->_client[client_index]);
 }
 
 bool Server::create_socket()
@@ -308,7 +308,22 @@ void Server::loop()
 					}
 				}
 			}
+			if (_poll_fd[i].revents & POLLOUT)
+			{
+				// Get the corresponding client
+				Client *client = get_client_by_fd(_poll_fd[i].fd);
+				// Attempt to flush the output buffer
+				ssize_t n = write(client->get_sockfd(), client->output_buffer.data(), client->output_buffer.size());
+				if (n > 0) {
+					client->output_buffer.erase(0, n); // Remove sent data
+				}
+				// If all data has been sent, remove POLLOUT flag.
+				if (client->output_buffer.empty()) {
+					_poll_fd[i].events &= ~POLLOUT;
+				}
+			}
 		}
+		
 		cleanup_disconnected_clients();
 	}
 }
@@ -346,16 +361,16 @@ bool Server::authenticateClient(const msg_tokens &tokenized_message, int client_
 		{
 			std::string error_msg = ":server 464 " + this->_client[client_index].get_nick_name() +
 									" :Too many failed authentication attempts. Disconnecting...\n";
-			putstr_fd(error_msg, this->_client[client_index].get_sockfd());
+			send_to_client(error_msg, this->_client[client_index]);
 			std::string quit_msg = ":" + this->_client[client_index].get_nick_name() +
 								" QUIT :Excessive failed authentication\n";
-			putstr_fd(quit_msg, this->_client[client_index].get_sockfd());
+			send_to_client(quit_msg, this->_client[client_index]);
 			disconnect_client(client_index);
 			return (false);
 		}
 		std::string passwd_mismatch_msg = ":server 464 " + this->_client[client_index].get_nick_name() +
 										" :Incorrect password. Try again.\n";
-		putstr_fd(passwd_mismatch_msg, this->_client[client_index].get_sockfd());
+		send_to_client(passwd_mismatch_msg, this->_client[client_index]);
 		return (false);
 	}
 	this->_client[client_index].reset_failed_auth_attempts();

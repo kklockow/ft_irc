@@ -26,7 +26,7 @@ void	execute_operator_cmd(const Server::MsgTokens &tokenized_message, Client &op
 			std::string errorMsg = ":server 461 "
 									+ operator_client.get_nick_name()
 									+ " KICK : use /kick <client> [<optional comment>]\r\n";
-			putstr_fd(errorMsg, operator_client.get_sockfd());
+			server.send_to_client(errorMsg, operator_client);
 			return;
 		}
 		Channel *channel = server.get_channel_by_name(tokenized_message.params[0]);
@@ -36,7 +36,7 @@ void	execute_operator_cmd(const Server::MsgTokens &tokenized_message, Client &op
 									+ operator_client.get_nick_name() + " "
 									+ tokenized_message.params[0]
 									+ " :No such channel\r\n";
-			putstr_fd(errorMsg, operator_client.get_sockfd());
+			server.send_to_client(errorMsg, operator_client);
 			return;
 		}
 		std::vector<std::string> operator_list = channel->get_operator_list();
@@ -46,7 +46,7 @@ void	execute_operator_cmd(const Server::MsgTokens &tokenized_message, Client &op
 									+ operator_client.get_nick_name() + " " 
 									+ channel->get_name() 
 									+ " :You're not channel operator\r\n";
-			putstr_fd(errorMsg, operator_client.get_sockfd());
+			server.send_to_client(errorMsg, operator_client);
 			return;
 		}
 		kick_client(tokenized_message, *channel, tokenized_message.params[1], operator_client, server);
@@ -59,7 +59,7 @@ void	execute_operator_cmd(const Server::MsgTokens &tokenized_message, Client &op
 			std::string errorMsg = ":server 461 "
 									+ operator_client.get_nick_name()
 									+ " INVITE : use /invite <client> <channel>\r\n";
-			putstr_fd(errorMsg, operator_client.get_sockfd());
+			server.send_to_client(errorMsg, operator_client);
 			return;
 		}
 		Channel *channel = server.get_channel_by_name(tokenized_message.params[1]);
@@ -69,7 +69,7 @@ void	execute_operator_cmd(const Server::MsgTokens &tokenized_message, Client &op
 									+ operator_client.get_nick_name() + " "
 									+ tokenized_message.params[1]
 									+ " :No such channel\r\n";
-			putstr_fd(errorMsg, operator_client.get_sockfd());
+			server.send_to_client(errorMsg, operator_client);
 			return;
 		}
 		std::vector<std::string> operator_list = channel->get_operator_list();
@@ -79,7 +79,7 @@ void	execute_operator_cmd(const Server::MsgTokens &tokenized_message, Client &op
 									+ operator_client.get_nick_name() + " " 
 									+ channel->get_name() 
 									+ " :You're not channel operator\r\n";
-			putstr_fd(errorMsg, operator_client.get_sockfd());
+			server.send_to_client(errorMsg, operator_client);
 			return;
 		} 
 		invite_client(*channel, tokenized_message.params[0], operator_client, server);
@@ -92,7 +92,7 @@ void	execute_operator_cmd(const Server::MsgTokens &tokenized_message, Client &op
 			std::string errorMsg = ":server 461 "
 									+ operator_client.get_nick_name()
 									+ " TOPIC : use /topic <channel> [<topic>]\r\n";
-			putstr_fd(errorMsg, operator_client.get_sockfd());
+			server.send_to_client(errorMsg, operator_client);
 			return;
 		}
 		Channel *channel = server.get_channel_by_name(tokenized_message.params[0]);
@@ -102,7 +102,7 @@ void	execute_operator_cmd(const Server::MsgTokens &tokenized_message, Client &op
 									+ operator_client.get_nick_name() + " "
 									+ tokenized_message.params[0]
 									+ " :No such channel\r\n";
-			putstr_fd(errorMsg, operator_client.get_sockfd());
+			server.send_to_client(errorMsg, operator_client);
 			return;
 		}
 		set_topic(tokenized_message, *channel, operator_client, server);
@@ -114,7 +114,7 @@ void	execute_operator_cmd(const Server::MsgTokens &tokenized_message, Client &op
 			std::string errorMsg = ":server 461 "
 									+ operator_client.get_nick_name()
 									+ " MODE : use /mode <channel> <flag> [<optional comment>]\r\n";
-			putstr_fd(errorMsg, operator_client.get_sockfd());
+			server.send_to_client(errorMsg, operator_client);
 			return;
 		}
 		Channel *channel = server.get_channel_by_name(tokenized_message.params[0]);
@@ -124,7 +124,7 @@ void	execute_operator_cmd(const Server::MsgTokens &tokenized_message, Client &op
 									+ operator_client.get_nick_name() + " "
 									+ tokenized_message.params[0]
 									+ " :No such channel\r\n";
-			putstr_fd(errorMsg, operator_client.get_sockfd());
+			server.send_to_client(errorMsg, operator_client);
 			return;
 		}
 		std::vector<std::string> operator_list = channel->get_operator_list();
@@ -134,7 +134,7 @@ void	execute_operator_cmd(const Server::MsgTokens &tokenized_message, Client &op
 									+ operator_client.get_nick_name() + " " 
 									+ channel->get_name() 
 									+ " :You're not channel operator\r\n";
-			putstr_fd(errorMsg, operator_client.get_sockfd());
+			server.send_to_client(errorMsg, operator_client);
 			return;
 		}
 		check_mode(tokenized_message, *channel, operator_client, server);
@@ -151,7 +151,7 @@ void kick_client(const Server::MsgTokens tokenized_message, Channel &channel, st
 								+ operator_client.get_nick_name() + " " 
 								+ channel.get_name() 
 								+ " :Client is not in the Channel\r\n";
-		putstr_fd(errorMsg, operator_client.get_sockfd());
+		server.send_to_client(errorMsg, operator_client);
 		return;
     }
 	if (target_nickname == operator_client.get_nick_name())
@@ -176,7 +176,7 @@ void kick_client(const Server::MsgTokens tokenized_message, Channel &channel, st
 	{
 		Client* client = server.get_client_by_nickname(*it);
 		if (client)
-			putstr_fd(kick_message, client->get_sockfd());
+			server.send_to_client(kick_message, *client);
 	}
 }
 
@@ -191,7 +191,7 @@ void invite_client(Channel &channel, std::string target_nickname, Client &operat
 								+ operator_client.get_nick_name() + " " 
 								+ channel.get_name() 
 								+ " :no such client\r\n";
-		putstr_fd(errorMsg, operator_client.get_sockfd());
+		server.send_to_client(errorMsg, operator_client);
 		return;
     }
 	//check if client is in the channel
@@ -201,12 +201,12 @@ void invite_client(Channel &channel, std::string target_nickname, Client &operat
 		std::string inviteMsg = ":" + operator_client.get_nick_name()
 								+ " INVITE " + target_nickname
 								+ " " + channel.get_name() + "\r\n";
-		putstr_fd(inviteMsg, target_client->get_sockfd());
+		server.send_to_client(inviteMsg, *target_client);
 		//send confirmation message to client, that the invite was send successfully
 		std::string reply = ":server 341 "
 							+ operator_client.get_nick_name() + " "
 							+ target_nickname + " " + channel.get_name() + "\r\n";
-		putstr_fd(reply, operator_client.get_sockfd());
+		server.send_to_client(reply, operator_client);
 		channel.add_invited_to_channel(target_nickname);
 	}
 	else //target is already in the channel
@@ -215,7 +215,7 @@ void invite_client(Channel &channel, std::string target_nickname, Client &operat
 								+ operator_client.get_nick_name() + " " 
 								+ channel.get_name() 
 								+ " :User is already on channel\r\n";
-		putstr_fd(errorMsg, operator_client.get_sockfd());
+		server.send_to_client(errorMsg, operator_client);
 		return;
 	}
 }
@@ -232,7 +232,7 @@ void set_topic(const Server::MsgTokens &tokenized_message, Channel &channel, Cli
 								+ operator_client.get_nick_name() + " " 
 								+ channel.get_name() 
 								+ " :Client not in the Channel\r\n";
-		putstr_fd(errorMsg, operator_client.get_sockfd());
+		server.send_to_client(errorMsg, operator_client);
 		return;
 	}
 	if (tokenized_message.trailing.empty())
@@ -243,7 +243,7 @@ void set_topic(const Server::MsgTokens &tokenized_message, Channel &channel, Cli
 								+ operator_client.get_nick_name() + " "
 								+ channel.get_name() 
 								+ ": No topic set\r\n";
-			putstr_fd(reply, operator_client.get_sockfd());
+			server.send_to_client(reply, operator_client);
 			return;
 		}
 		else
@@ -252,7 +252,7 @@ void set_topic(const Server::MsgTokens &tokenized_message, Channel &channel, Cli
 								+ operator_client.get_nick_name() + " "
 								+ channel.get_name() 
 								+ " :" + channel.get_topic() + "\r\n";
-			putstr_fd(reply, operator_client.get_sockfd());
+			server.send_to_client(reply, operator_client);
 			return;
 		}
 	}
@@ -265,7 +265,7 @@ void set_topic(const Server::MsgTokens &tokenized_message, Channel &channel, Cli
 									+ operator_client.get_nick_name() + " " 
 									+ channel.get_name() 
 									+ " :You're not channel operator\r\n";
-			putstr_fd(errorMsg, operator_client.get_sockfd());
+			server.send_to_client(errorMsg, operator_client);
 			return;
 		}
 	}
@@ -284,7 +284,7 @@ void set_topic(const Server::MsgTokens &tokenized_message, Channel &channel, Cli
 	{
 		Client* client = server.get_client_by_nickname(*it);
 		if (client)
-			putstr_fd(topic_message, client->get_sockfd());
+			server.send_to_client(topic_message, *client);
 	}
 	return;
 }
@@ -325,7 +325,7 @@ void	check_mode(const Server::MsgTokens &tokenized_message, Channel &channel, Cl
 			std::string errorMsg = ":server 461 "
 									+ operator_client.get_nick_name()
 									+ " MODE : use /mode <channel> <flag> <password>\r\n";
-			putstr_fd(errorMsg, operator_client.get_sockfd());
+			server.send_to_client(errorMsg, operator_client);
 			return;
 		}
 		if (tokenized_message.params[2] == channel.get_password())
@@ -339,7 +339,7 @@ void	check_mode(const Server::MsgTokens &tokenized_message, Channel &channel, Cl
 			std::string errorMsg = ":server 461 "
 									+ operator_client.get_nick_name()
 									+ " MODE : use /mode <channel> <flag> <password>\r\n";
-			putstr_fd(errorMsg, operator_client.get_sockfd());
+			server.send_to_client(errorMsg, operator_client);
 			return;
 		}
 		if (channel.get_password().empty())
@@ -351,7 +351,7 @@ void	check_mode(const Server::MsgTokens &tokenized_message, Channel &channel, Cl
 			std::string errorMsg = ":server 475 "
 									+ operator_client.get_nick_name() + " " 
 									+ channel.get_name() + " :Password incorrect\r\n";
-			putstr_fd(errorMsg, operator_client.get_sockfd());
+			server.send_to_client(errorMsg, operator_client);
 		}
 	}
 	//set and unset user limit
@@ -362,7 +362,7 @@ void	check_mode(const Server::MsgTokens &tokenized_message, Channel &channel, Cl
 			std::string errorMsg = ":server 461 "
 									+ operator_client.get_nick_name()
 									+ " MODE : use /mode <channel> <flag> <limit_number>\r\n";
-			putstr_fd(errorMsg, operator_client.get_sockfd());
+			server.send_to_client(errorMsg, operator_client);
 			return;
 		}
 		int set_limit_to = 0;
@@ -371,19 +371,19 @@ void	check_mode(const Server::MsgTokens &tokenized_message, Channel &channel, Cl
 			if (set_limit_to > 1024 || set_limit_to < 1) {
 				std::string errorMsg = ":server NOTICE " + operator_client.get_nick_name()
 										+ " :Invalid user limit. The limit must be between 1 and 1024.\r\n";
-				putstr_fd(errorMsg, operator_client.get_sockfd());
+				server.send_to_client(errorMsg, operator_client);
 				return;
 			}
 			channel.user_limit = set_limit_to;
 		} catch (const std::invalid_argument& e) {
 			std::string errorMsg = ":server NOTICE " + operator_client.get_nick_name()
 									+ " :Invalid parameter. Must be a valid number.\r\n";
-			putstr_fd(errorMsg, operator_client.get_sockfd());
+			server.send_to_client(errorMsg, operator_client);
 			return;
 		} catch (const std::out_of_range& e) {
 			std::string errorMsg = ":server NOTICE " + operator_client.get_nick_name()
 									+ " :Number out of range.\r\n";
-			putstr_fd(errorMsg, operator_client.get_sockfd());
+			server.send_to_client(errorMsg, operator_client);
 			return;
 		}
 		channel.user_limit = set_limit_to; // check that it doesnt exeed 1024
@@ -402,14 +402,14 @@ void	check_mode(const Server::MsgTokens &tokenized_message, Channel &channel, Cl
 			std::string errorMsg = ":server 461 "
 									+ operator_client.get_nick_name()
 									+ " MODE : use /mode <channel> <flag> <client_nickname>\r\n";
-			putstr_fd(errorMsg, operator_client.get_sockfd());
+			server.send_to_client(errorMsg, operator_client);
 			return;
 		}
 		if (!channel.is_client_in_list(tokenized_message.params[2], channel.get_client_list())) // check if target is inside the channel
 		{
 			std::string errorMsg = ":server 441 " + operator_client.get_nick_name()
  									+ " " + channel.get_name() + " :User not in channel\r\n";
- 			putstr_fd(errorMsg, operator_client.get_sockfd());
+ 			server.send_to_client(errorMsg, operator_client);
          	return;
 		}
 		std::vector<std::string> operator_list = channel.get_operator_list();
@@ -425,7 +425,7 @@ void	check_mode(const Server::MsgTokens &tokenized_message, Channel &channel, Cl
 			std::string errorMsg = ":server 461 "
 									+ operator_client.get_nick_name()
 									+ " MODE : use /mode <channel> <flag> <client_nickname>\r\n";
-			putstr_fd(errorMsg, operator_client.get_sockfd());
+			server.send_to_client(errorMsg, operator_client);
 			return;
 		}
 		std::vector<std::string> operator_list = channel.get_operator_list();
@@ -441,7 +441,7 @@ void	check_mode(const Server::MsgTokens &tokenized_message, Channel &channel, Cl
 								+ operator_client.get_nick_name() + " " 
 								+ tokenized_message.params[1]
 								+ " :is unknown mode char to me\r\n";
-		putstr_fd(errorMsg, operator_client.get_sockfd());
+		server.send_to_client(errorMsg, operator_client);
 		return;
 	}
 	//Notify all clients
@@ -458,7 +458,8 @@ void	check_mode(const Server::MsgTokens &tokenized_message, Channel &channel, Cl
 	{
 		Client* client = server.get_client_by_nickname(*it);
 		if (client)
-		putstr_fd(notify_mode_msg, client->get_sockfd());
+		server.send_to_client(notify_mode_msg, *client);
 	}
 	return;
 }
+

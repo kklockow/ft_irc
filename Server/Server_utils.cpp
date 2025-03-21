@@ -81,3 +81,26 @@ Channel* Server::get_channel_by_name(const std::string &channel_name)
 		return nullptr;
 	return &(_channel[index]);
 }
+
+Client* Server::get_client_by_fd(int fd)
+{
+    for (std::vector<Client>::iterator it = _client.begin(); it != _client.end(); ++it) {
+        if (it->get_sockfd() == fd)
+            return &(*it);
+    }
+    return nullptr;
+}
+
+void Server::send_to_client(const std::string &msg, Client &client) {
+    // Append the message to the client's output buffer.
+    client.output_buffer.append(msg);
+    // Find the client's pollfd entry and enable POLLOUT.
+    for (size_t i = 0; i < _poll_fd.size(); ++i) 
+	{
+        if (_poll_fd[i].fd == client.get_sockfd()) 
+		{
+            _poll_fd[i].events |= POLLOUT;
+            break;
+        }
+    }
+}
