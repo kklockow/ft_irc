@@ -191,7 +191,7 @@ void Server::receive_data(int client_index)
     if (!valid_client_index(client_index) || _client[client_index].get_sockfd() == -1)
         return;
 
-    char buffer[1028];
+    char buffer[1024];
     int client_fd = _client[client_index].get_sockfd();
     int n = read(client_fd, buffer, sizeof(buffer) - 1);
 
