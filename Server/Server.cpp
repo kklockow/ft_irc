@@ -308,7 +308,7 @@ void Server::loop()
 					}
 				}
 			}
-			if (_poll_fd[i].revents & POLLOUT)
+			if (i < (int)_poll_fd.size() && _poll_fd[i].revents & POLLOUT)
 			{
 				// Get the corresponding client
 				Client *client = get_client_by_fd(_poll_fd[i].fd);
@@ -323,7 +323,7 @@ void Server::loop()
 				}
 			}
 		}
-		
+
 		cleanup_disconnected_clients();
 	}
 }
