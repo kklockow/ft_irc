@@ -51,10 +51,10 @@ void Server::execute_command(Server::msg_tokens tokenized_message, int client_in
     if (!valid_client_index(client_index) || _client[client_index].get_sockfd() == -1)
 		return;
 	auto it = command_map.find(tokenized_message.command);
-	if (std::isdigit(tokenized_message.command[0]))
-		put_str_fd(tokenized_message, client_index);
-	else if (!this->_client[client_index].get_authenticated() && tokenized_message.command != "PASS")
-		execute_command(error_message("464", "Password required"), client_index);
+	// if (std::isdigit(tokenized_message.command[0]))
+	// 	put_str_fd(tokenized_message, client_index);
+	if (!this->_client[client_index].get_authenticated() && tokenized_message.command != "PASS")
+		send_error_message(client_index, "464", "Password required");
 	else if (tokenized_message.command == "PASS")
 		authenticateClient(tokenized_message, client_index);
 	else if (tokenized_message.command == "KICK" || tokenized_message.command == "INVITE" ||
@@ -65,7 +65,7 @@ void Server::execute_command(Server::msg_tokens tokenized_message, int client_in
     else if (it != command_map.end() && it->second.handler)
         (this->*(it->second.handler))(tokenized_message, client_index);
     else
-        execute_command(error_message("421", "Unknown command"), client_index);
+		send_error_message(client_index, "421", "Unknown command");
     this->_client[client_index].set_last_message((char *)"");
 }
 
